@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Recipe {
+  id           String      @id @default(uuid())
+  name         String
+  method       String
+  coffeeGrams  Float
+  waterGrams   Float
+  ratio        Float
+  grindSize    String
+  temperature  Float
+  beanOrigin   String?
+  aiGenerated  Boolean     @default(false)
+  notes        String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  stages       BrewStage[]
+  sessions     BrewSession[]
+}
+
+model BrewStage {
+  id            String  @id @default(uuid())
+  recipeId      String
+  recipe        Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  name          String
+  targetWeight  Float
+  targetSeconds Int
+  temperature   Float
+  notes         String?
+}
+
+model BrewSession {
+  id              String    @id @default(uuid())
+  recipeId        String?
+  recipe          Recipe?   @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  finalWeight     Float
+  historyJson     String?   // JSON string of WeightDataPoint[]
+  sensoryFeedback String?   // JSON string of SensoryFeedback
+}

@@ -1,0 +1,56 @@
+{
+  "name": "brewmaster-ai",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "version": "1.0.0",
+  "description": "Premium coffee brewing assistant with AI-powered insights and hardware integration",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@prisma/adapter-better-sqlite3": "^7.7.0",
+    "@prisma/client": "^7.7.0",
+    "ai": "^6.0.146",
+    "better-sqlite3": "^12.8.0",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.7.0",
+    "next": "^16.2.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.15.0",
+    "uuid": "^10.0.0",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/uuid": "^10.0.0",
+    "@types/web-bluetooth": "^0.0.21",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^16.2.2",
+    "prisma": "^7.7.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "coffee",
+    "brewing",
+    "ai",
+    "bluetooth",
+    "scale",
+    "acaia",
+    "timemore"
+  ],
+  "license": "MIT"
+}
