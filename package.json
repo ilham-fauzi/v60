@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "opennextjs-cloudflare build",
+    "build:cf": "opennextjs-cloudflare build && mv .open-next/worker.js .open-next/_worker.js",
     "deploy:cf": "npm run build:cf && wrangler pages deploy .open-next",
     "start": "next start",
     "lint": "next lint",
