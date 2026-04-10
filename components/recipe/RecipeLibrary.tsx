@@ -143,18 +143,17 @@ export function RecipeLibrary({ onSelectSuccess }: RecipeLibraryProps) {
   const presets = recipes.filter((r) => r.id.startsWith('preset-'))
   const custom = recipes.filter((r) => !r.id.startsWith('preset-'))
 
-  const handleSave = (recipeData: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>) => {
-    let savedRecipe: Recipe
+  const handleSave = async (recipeData: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editorState.recipe) {
       updateRecipe(editorState.recipe.id, recipeData)
-      savedRecipe = { ...editorState.recipe, ...recipeData, updatedAt: new Date().toISOString() }
+      const savedRecipe = { ...editorState.recipe, ...recipeData, updatedAt: new Date().toISOString() }
       
       // Sync with BrewStore if this is the active recipe
       if (activeRecipe?.id === savedRecipe.id) {
         setActiveRecipe(savedRecipe)
       }
     } else {
-      savedRecipe = addRecipe(recipeData)
+      await addRecipe(recipeData as any)
     }
     setEditorState({ open: false, recipe: null })
   }
