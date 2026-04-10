@@ -18,6 +18,21 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
 }
 
+export function DashboardSkeleton() {
+  return (
+    <div className={styles.container} data-loading="true">
+      <div className={`v2-glass ${styles.skeletonHeader}`} />
+      <div className={styles.skeletonGrid}>
+        <div className={`v2-glass ${styles.skeletonMetric}`} />
+        <div className={`v2-glass ${styles.skeletonMetric}`} />
+        <div className={`v2-glass ${styles.skeletonMetric}`} />
+      </div>
+      <div className={`v2-glass ${styles.skeletonControl}`} />
+      <div className={`v2-glass ${styles.skeletonTimeline}`} />
+    </div>
+  )
+}
+
 export function BrewDashboardV2({ recipe }: Props) {
   const {
     currentWeight,
@@ -68,10 +83,8 @@ export function BrewDashboardV2({ recipe }: Props) {
   }, [handleKeyDown])
 
   const stages = recipe?.stages ?? []
-  let cumulativeTarget = 0
   const stagesWithCumulative = stages.map(stage => {
-    cumulativeTarget += stage.targetWeight
-    return { ...stage, cumulativeTotal: cumulativeTarget }
+    return { ...stage, cumulativeTotal: stage.targetWeight }
   })
   const currentStage = stagesWithCumulative[currentStageIndex]
   const currentCumulativeTarget = currentStage?.cumulativeTotal ?? 0
@@ -87,9 +100,9 @@ export function BrewDashboardV2({ recipe }: Props) {
             <h1 style={{ fontSize: 'var(--text-3xl)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 'var(--space-1)' }}>
               {recipe?.name || 'Manual Session'}
             </h1>
-            <p style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <Thermometer size={14} /> 94°C Target • {recipe?.method || 'V60'} Precision
-            </p>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <Thermometer size={14} /> {recipe?.temperature || 93}°C Target • {recipe?.method || 'V60'} Precision
+            </div>
           </div>
           <div className="v2-glass" style={{ padding: 'var(--space-2) var(--space-4)', borderRadius: 'var(--radius-full)', border: '1px solid var(--cyber-teal)', color: 'var(--cyber-teal)', textShadow: 'var(--cyber-glow-teal)' }}>
             <span style={{ fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.1em' }}>PRECISION MODE</span>
@@ -203,11 +216,14 @@ export function BrewDashboardV2({ recipe }: Props) {
           {stagesWithCumulative.map((stage, idx) => (
             <motion.div 
               key={idx} 
+              initial={false}
               whileHover={{ 
-                y: -5, 
+                y: -8, 
                 opacity: 1,
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                borderColor: idx === currentStageIndex ? 'rgba(0, 242, 255, 0.5)' : 'rgba(255, 255, 255, 0.2)'
+                backgroundColor: 'rgba(0, 242, 255, 0.15)',
+                borderColor: 'var(--cyber-teal)',
+                boxShadow: '0 8px 25px rgba(0, 242, 255, 0.4)',
+                filter: 'grayscale(0) brightness(1.2)'
               }}
               style={{ 
                 minWidth: 160, 

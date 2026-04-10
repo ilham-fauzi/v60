@@ -4,6 +4,40 @@
   gap: var(--space-6);
 }
 
+.container[data-loading="true"] {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.skeletonHeader {
+  height: 100px;
+  border-radius: var(--radius-lg);
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+
+.skeletonMetric {
+  height: 180px;
+  border-radius: var(--radius-xl);
+}
+
+.skeletonControl {
+  height: 80px;
+  border-radius: var(--radius-xl);
+  margin-top: var(--space-8);
+}
+
+.skeletonTimeline {
+  height: 160px;
+  border-radius: var(--radius-xl);
+  margin-top: var(--space-8);
+}
+
 .metricsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

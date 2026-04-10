@@ -1,47 +1,51 @@
-# ☕ BrewMaster AI: Premium Coffee Assistant
+# ☕ V60: Premium Coffee Assistant
 
-BrewMaster AI is a state-of-the-art web application designed for coffee enthusiasts who demand precision and insight in every cup. It combines hardware telemetry, sleek modern design, and AI-powered intelligence to elevate your daily brewing ritual.
+V60 is a state-of-the-art web application designed for coffee enthusiasts who demand precision and insight in every cup. It combines high-fidelity telemetry, a hybrid local-first architecture, and a revolutionary stateless sharing engine to elevate your brewing ritual.
 
 ---
 
 ## 🚀 Technology Stack
 
-BrewMaster AI is built with a modern, high-performance stack:
+V60 is built with a cutting-edge technical stack optimized for performance and portability:
 
-- **Core Framework**: [Next.js 16](https://nextjs.org/) (App Router) for a seamless, server-side rendered experience.
+- **Core Framework**: [Next.js 16](https://nextjs.org/) (App Router) for a seamless, sub-second response experience.
 - **Language**: [TypeScript](https://www.typescriptlang.org/) for robust, type-safe development.
-- **Database**: [SQLite](https://sqlite.org/) managed by [Prisma 7.0](https://www.prisma.io/) (using Driver Adapters) for persistent, local-first data storage.
-- **State Management**: [Zustand](https://github.com/pmndrs/zustand) for lightweight and reactive application state.
+- **Architecture**: **Hybrid Local-First**
+    - Browser-side persistence via **Zustand 5** (localStorage) for offline-ready workflows.
+    - Server-side synchronization using **SQLite** managed by **Prisma 7.0**.
+- **Sharing Engine**: **Stateless Protocol** using Base64 URL compression for zero-database recipe sharing.
 - **Design System**: 
-    - Custom **Cyber-Barista** Design System (Vanilla CSS).
-    - [Framer Motion](https://www.framer.com/motion/) for fluid, high-fidelity animations.
+    - Custom **Cyber-Barista** Design System (Vanilla CSS + Tailwind 4).
+    - [Framer Motion](https://www.framer.com/motion/) for fluid, premium animations.
     - [Lucide React](https://lucide.dev/) for precise, minimalist iconography.
-- **Visualizations**: [Recharts](https://recharts.org/) for interactive radar flavor profiles and telemetry charts.
-- **AI Intelligence**: [Google Gemini API](https://ai.google.dev/) for generating brewing insights and aroma optimizations.
-- **Hardware Integration**: Web Bluetooth API for connecting with digital specialty scales (Acaia, Timemore, etc.).
+- **Hardware Integration**: Web Bluetooth API for connecting with professional digital scales (Acaia, Timemore, etc.).
+- **Visualizations**: [Recharts](https://recharts.org/) for real-time telemetry and extraction analysis.
 
 ---
 
-## 🌊 Application Flow
+## 🌊 Application Flow (V2)
 
-BrewMaster AI follows a logical, high-performance workflow designed to minimize friction during the brewing process:
+The application follows a logical, high-performance workflow designed to minimize friction during the brewing process:
 
-### 1. The Digital Library (Recipe Management)
-- **Discover**: Browse through system-curated master presets (V60, AeroPress, etc.).
-- **Create**: Design custom formulations with precise ratios, grind sizes, and temperature profiles.
-- **Sync**: All recipes are synchronized with the local SQLite database for offline-ready persistence.
-
-### 2. The Brew Dashboard (Real-time Execution)
-- **Telemetry**: Real-time weight and flow-rate data from connected hardware scales.
-- **Extraction Sequence**: A visual, stage-by-stage guide showing progress bars and target weights.
+### 1. The Kinetic Dashboard
+- **Telemetry Focused**: Real-time weight and flow-rate data from connected hardware scales.
+- **Formula Database**: A quick-access side panel for browsing and searching all available recipes (Presets & Local).
+- **One-Click Activation**: Instantly switch between extraction profiles directly from the sidebar.
 - **Focus Mode**: A minimalist, high-visibility UI optimized for deep focus during the pour.
 
-### 3. Sensory Feedback & Journaling
-- **Capture**: After every brew, record your sensory data (Aroma, Sweetness, Aciditiy, etc.) and personal notes.
-- **History**: View your persistent "Dial-In Journal" to track how your recipes evolve over time.
+### 2. Stateless Recipe Sharing
+- **Zero-DB Sharing**: Generate a unique, time-hashed link that encodes the entire recipe data. 
+- **Universal Portability**: Share your formulas anywhere (WhatsApp, Discord, etc.) without requiring a server account.
+- **Shared Bridge**: Incoming shared links are automatically decoded and can be instantly saved to your local library.
 
-### 4. AI Optimization
-- **Insights**: The AI engine analyzes your sensory feedback and suggests adjustments to grind size, water temperature, or pouring technique for the next cup.
+### 3. Local-First Library
+- **Offline Persistence**: Your custom recipes are stored in your browser's local storage.
+- **Hybrid Sync**: Official presets are synced from the master database to your local library.
+- **Cloud Readiness**: (Architecture ready for account-based sync in future updates).
+
+### 4. Hardware Interaction
+- **Precision Extraction**: Stage-by-stage guide with progress bars and dynamic target weights for complex multi-pour recipes.
+- **Dual Telemetry**: Monitor weight and flow rate simultaneously for "Dialing-In" perfection.
 
 ---
 
@@ -49,13 +53,13 @@ BrewMaster AI follows a logical, high-performance workflow designed to minimize 
 
 ### 1. Prerequisites
 - Node.js >= 18.0.0
-- A Web Bluetooth compatible browser (for hardware scales)
+- A Web Bluetooth compatible browser (Chrome/Edge recommended for scale connectivity)
 
 ### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/brewmaster-ai.git
-cd brewmaster-ai
+git clone https://github.com/your-repo/v60.git
+cd v60
 
 # Install dependencies
 npm install --legacy-peer-deps
@@ -66,7 +70,7 @@ npm install --legacy-peer-deps
 # Initialize the SQLite database and run migrations
 npx prisma migrate dev --name init
 
-# Seed the database with master recipes
+# Seed the database with master presets
 npx prisma db seed
 ```
 

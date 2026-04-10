@@ -13,7 +13,7 @@
 }
 
 .panel {
-  width: 500px;
+  width: 640px;
   max-width: 95vw;
   height: 100vh;
   background: rgba(13, 14, 15, 0.98);
@@ -235,6 +235,41 @@
   color: var(--cyber-amber);
 }
 
+.magicBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: rgba(255, 191, 0, 0.1);
+  border: 1px solid rgba(255, 191, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--cyber-amber);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.magicBtn:hover {
+  background: rgba(255, 191, 0, 0.2);
+  border-color: var(--cyber-amber);
+  box-shadow: 0 0 10px rgba(255, 191, 0, 0.2);
+}
+
+.autoTag {
+  background: rgba(0, 242, 255, 0.1);
+  color: var(--cyber-teal);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 7px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-left: var(--space-2);
+  border: 1px solid rgba(0, 242, 255, 0.2);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -243,4 +278,32 @@
 @keyframes slideIn {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
+}
+
+.segmentedControl {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 3px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--cyber-border);
+}
+
+.segmentedControl button {
+  padding: 5px 12px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  border-radius: calc(var(--radius-lg) - 3px);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.activeSegment {
+  background: var(--cyber-teal) !important;
+  color: #000 !important;
+  box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
 }

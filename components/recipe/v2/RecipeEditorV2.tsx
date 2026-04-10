@@ -14,9 +14,9 @@ interface Props {
 }
 
 const DEFAULT_STAGES: Omit<BrewStage, 'id'>[] = [
-  { name: 'Bloom', targetWeight: 45, targetSeconds: 45, temperature: 93, notes: 'Saturate all grounds gently' },
-  { name: 'Main Pour', targetWeight: 195, targetSeconds: 60, temperature: 93 },
-  { name: 'Drawdown', targetWeight: 0, targetSeconds: 60, temperature: 0 },
+  { name: 'Blooming', targetWeight: 50, targetSeconds: 50, temperature: 93, notes: 'Degas and saturate grounds' },
+  { name: 'Main Pour', targetWeight: 240, targetSeconds: 60, temperature: 93 },
+  { name: 'Drawdown', targetWeight: 240, targetSeconds: 60, temperature: 0 },
 ]
 
 export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
@@ -31,6 +31,9 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
   const [stages, setStages] = useState<BrewStage[]>(
     initialRecipe?.stages || DEFAULT_STAGES.map(s => ({ ...s, id: uuidv4() }))
   )
+  const [modifiedStages, setModifiedStages] = useState<Set<string>>(new Set(initialRecipe ? stages.map(s => s.id) : []))
+  const [viewMode, setViewMode] = useState<'total' | 'step'>('total')
+  const [errorWarning, setErrorWarning] = useState<string | null>(null)
 
   const nameInputRef = useRef<HTMLInputElement>(null)
 
@@ -40,7 +43,83 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
     }
   }, [initialRecipe])
 
-  // Enforce roles whenever stages change
+  // Precise rounding helper to 1 decimal place
+  const roundToOne = (num: number) => Math.round(num * 10) / 10
+
+  // Time formatting helpers
+  const formatTime = (seconds: number) => {
+    const min = Math.floor(seconds / 60)
+    const sec = seconds % 60
+    return `${min}:${sec.toString().padStart(2, '0')}`
+  }
+
+  const parseTime = (timeStr: string) => {
+    if (!timeStr.includes(':')) return parseInt(timeStr) || 0
+    const [min, sec] = timeStr.split(':').map(val => parseInt(val) || 0)
+    return (min * 60) + sec
+  }
+
+  // Calculation Handlers
+  const calculateSmartSequence = (water: number, coffee: number, stageCount: number): Omit<BrewStage, 'id'>[] => {
+    if (stageCount < 2) return []
+
+    const waterVal = roundToOne(water)
+    const coffeeVal = roundToOne(coffee)
+    const bloomWeight = Math.min(roundToOne(coffeeVal * 3), roundToOne(waterVal * 0.25))
+    const result: Omit<BrewStage, 'id'>[] = []
+
+    // 1. Bloom
+    result.push({ 
+      name: 'Blooming', 
+      targetWeight: bloomWeight, 
+      targetSeconds: 45, 
+      temperature: temperature 
+    })
+
+    // 2. Main Pours
+    const remainingStages = stageCount - 2
+    if (remainingStages > 0) {
+      const weightStep = (waterVal - bloomWeight) / remainingStages
+      for (let i = 1; i <= remainingStages; i++) {
+        const cumulativeWeight = roundToOne(bloomWeight + (weightStep * i))
+        result.push({
+          name: i === 1 ? 'Main Pour' : `Pour ${i}`,
+          targetWeight: cumulativeWeight,
+          targetSeconds: 45,
+          temperature: temperature
+        })
+      }
+    }
+
+    // 3. Drawdown
+    result.push({
+      name: 'Drawdown',
+      targetWeight: waterVal,
+      targetSeconds: 60,
+      temperature: 0
+    })
+
+    return result
+  }
+
+  const applySmartSuggest = (water: number, coffee: number, currentStages: BrewStage[]) => {
+    const smart = calculateSmartSequence(water, coffee, currentStages.length)
+    return currentStages.map((s, idx) => {
+      // If the stage is modified, keep it. Otherwise, use smart suggestion.
+      if (modifiedStages.has(s.id)) return s
+      return { ...s, ...smart[idx] }
+    })
+  }
+
+  const standardizeSequence = () => {
+    const smart = calculateSmartSequence(waterGrams, coffeeGrams, stages.length)
+    const newStages = stages.map((s, idx) => ({ ...s, ...smart[idx] }))
+    setStages(newStages)
+    setModifiedStages(new Set()) // Reset modifications
+    setErrorWarning(null)
+  }
+
+  // Enforce roles and auto-suggest
   useEffect(() => {
     if (stages.length < 2) return;
     
@@ -64,129 +143,170 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
   }, [stages])
 
   // Calculation Handlers
+  const rebalanceStagesProportionally = (newTotal: number, currentStages: BrewStage[]) => {
+    // Find the last non-drawdown total or the final drawdown total
+    const currentTotal = currentStages[currentStages.length - 1].targetWeight
+    if (currentTotal === 0 || isNaN(currentTotal)) return currentStages
+
+    const factor = newTotal / currentTotal
+    return currentStages.map((s, idx) => {
+        const isDrawdown = s.name === 'Drawdown' || idx === currentStages.length - 1
+        return { 
+          ...s, 
+          targetWeight: isDrawdown ? newTotal : parseFloat((s.targetWeight * factor).toFixed(1)) 
+        }
+    })
+  }
+
   const handleCoffeeChange = (val: number) => {
-    setCoffeeGrams(val)
-    const newWater = parseFloat((val * ratio).toFixed(1))
-    setWaterGrams(newWater)
-    // Adjust logic to distribute extra water to main pour (usually stage 1 or index 1)
-    if (stages.length > 1) {
-      const diff = newWater - waterGrams
-      const newStages = [...stages]
-      const targetIdx = Math.min(1, stages.length - 2)
-      newStages[targetIdx] = { ...newStages[targetIdx], targetWeight: Math.max(0, newStages[targetIdx].targetWeight + diff) }
-      setStages(newStages)
+    if (isNaN(val) || val <= 0) {
+      setCoffeeGrams(val)
+      return
     }
+    const roundedVal = roundToOne(val)
+    setCoffeeGrams(roundedVal)
+    const newWater = roundToOne(roundedVal * ratio)
+    setWaterGrams(newWater)
+    setStages(prev => applySmartSuggest(newWater, roundedVal, prev))
   }
 
   const handleRatioChange = (val: number) => {
-    setRatio(val)
-    const newWater = parseFloat((coffeeGrams * val).toFixed(1))
-    setWaterGrams(newWater)
-    // Re-distribute water
-    if (stages.length > 1) {
-      const diff = newWater - waterGrams
-      const newStages = [...stages]
-      const targetIdx = Math.min(1, stages.length - 2)
-      newStages[targetIdx] = { ...newStages[targetIdx], targetWeight: Math.max(0, newStages[targetIdx].targetWeight + diff) }
-      setStages(newStages)
+    if (isNaN(val) || val <= 0) {
+      setRatio(val)
+      return
     }
+    const roundedVal = roundToOne(val)
+    setRatio(roundedVal)
+    const newWater = roundToOne(coffeeGrams * roundedVal)
+    setWaterGrams(newWater)
+    setStages(prev => applySmartSuggest(newWater, coffeeGrams, prev))
   }
 
   const handleWaterChange = (val: number) => {
-    const diff = val - waterGrams
-    setWaterGrams(val)
-    setRatio(parseFloat((val / coffeeGrams).toFixed(1)))
-    // Distribute to main stage
-    if (stages.length > 1) {
-      const newStages = [...stages]
-      const targetIdx = Math.min(1, stages.length - 2)
-      newStages[targetIdx] = { ...newStages[targetIdx], targetWeight: Math.max(0, newStages[targetIdx].targetWeight + diff) }
-      setStages(newStages)
+    if (isNaN(val) || val <= 0) {
+      setWaterGrams(val)
+      return
     }
+    const roundedVal = roundToOne(val)
+    setWaterGrams(roundedVal)
+    setRatio(roundToOne(roundedVal / coffeeGrams))
+    setStages(prev => applySmartSuggest(roundedVal, coffeeGrams, prev))
   }
 
-  const handleStageWeightUpdate = (id: string, newWeight: number) => {
+  const handleStageWeightUpdate = (id: string, newTotal: number) => {
     const idx = stages.findIndex(s => s.id === id)
     if (idx === -1) return
-
-    const oldWeight = stages[idx].targetWeight
-    const diff = newWeight - oldWeight
     
-    const newStages = [...stages]
-    newStages[idx] = { ...newStages[idx], targetWeight: newWeight }
+    const isDrawdown = stages[idx].name === 'Drawdown' || idx === stages.length - 1
+    
+    // Drawdown is always 0 in UI, but internally it's waterGrams.
+    // However, if the user "edits" a 0 drawdown, they might be trying to adjust target.
+    if (isDrawdown) {
+       // Since it's read-only in UI now, this usually won't trigger, but keep for safety
+       if (newTotal > waterGrams) {
+            setErrorWarning(`Warning: Final weight exceeds target yield (${waterGrams.toFixed(1)}g).`)
+       } else {
+            setErrorWarning(null)
+       }
+       return
+    }
+    
+    const prevWeight = idx > 0 ? stages[idx - 1].targetWeight : 0
+    if (newTotal < prevWeight) return
 
-    // Waterfall: Adjust the next balance-able stage
-    // If it's the last stage, adjust the previous
-    if (idx === stages.length - 1) {
-      if (idx > 0) {
-        newStages[idx-1] = { ...newStages[idx-1], targetWeight: Math.max(0, newStages[idx-1].targetWeight - diff) }
-      }
-    } else {
-      // Adjust the next one
-      newStages[idx+1] = { ...newStages[idx+1], targetWeight: Math.max(0, newStages[idx+1].targetWeight - diff) }
+    // Track modification
+    const newModified = new Set(modifiedStages)
+    newModified.add(id)
+    setModifiedStages(newModified)
+
+    const newStages = [...stages]
+    
+    if (newTotal > waterGrams) {
+        setErrorWarning(`Warning: Stage ${idx + 1} (${newTotal.toFixed(1)}g) exceeds final target yield (${waterGrams.toFixed(1)}g).`)
+        newStages[idx] = { ...newStages[idx], targetWeight: newTotal }
+        setStages(newStages)
+        return
+    }
+    
+    setErrorWarning(null)
+    const oldWeight = stages[idx].targetWeight
+    const diff = newTotal - oldWeight
+    
+    newStages[idx] = { ...newStages[idx], targetWeight: newTotal }
+    
+    // Proportional redistribution for subsequent stages (excluding last one)
+    for (let i = idx + 1; i < newStages.length - 1; i++) {
+        newStages[i] = { 
+            ...newStages[i], 
+            targetWeight: roundToOne(Math.max(newTotal, Math.min(waterGrams, newStages[i].targetWeight + diff)))
+        }
     }
     
     setStages(newStages)
   }
 
+  const handleStageTimeUpdate = (id: string, newVal: string | number) => {
+    const idx = stages.findIndex(s => s.id === id)
+    if (idx === -1) return
+
+    const newSeconds = typeof newVal === 'string' ? parseTime(newVal) : newVal
+    const prevCumulative = stages.slice(0, idx).reduce((acc, s) => acc + s.targetSeconds, 0)
+
+    if (viewMode === 'total') {
+      const calculatedDuration = Math.max(0, newSeconds - prevCumulative)
+      updateStage(id, { targetSeconds: calculatedDuration })
+    } else {
+      updateStage(id, { targetSeconds: Math.max(0, newSeconds) })
+    }
+  }
+
   const updateStage = (id: string, updates: Partial<BrewStage>) => {
+    const newModified = new Set(modifiedStages)
+    newModified.add(id)
+    setModifiedStages(newModified)
+    
     if ('targetWeight' in updates) {
       handleStageWeightUpdate(id, updates.targetWeight!)
     } else {
-      setStages(stages.map(s => s.id === id ? { ...s, ...updates } : s))
+      setStages(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
     }
   }
 
   const addStage = () => {
-    const currentTotal = parseFloat(stages.reduce((acc, s) => acc + s.targetWeight, 0).toFixed(1))
-    const remainder = waterGrams - currentTotal
-    
-    let suggestedWeight = 0
-    let sourceId = ''
-
-    if (remainder > 1) {
-      suggestedWeight = remainder
-    } else if (stages.length > 2) {
-      // Find largest stage to split (excluding first and last)
-      const midStages = stages.slice(1, -1)
-      const largest = [...midStages].sort((a, b) => b.targetWeight - a.targetWeight)[0]
-      if (largest && largest.targetWeight > 10) {
-        suggestedWeight = parseFloat((largest.targetWeight / 2).toFixed(1))
-        sourceId = largest.id
-      }
-    }
-
-    const newStage = { id: uuidv4(), name: 'Main Pour', targetWeight: suggestedWeight, targetSeconds: 30, temperature: temperature }
-    const newStages = [...stages]
-    
-    // Apply source split if needed
-    if (sourceId) {
-      const sourceIdx = newStages.findIndex(s => s.id === sourceId)
-      newStages[sourceIdx] = { ...newStages[sourceIdx], targetWeight: parseFloat((newStages[sourceIdx].targetWeight - suggestedWeight).toFixed(1)) }
-    }
-
-    newStages.splice(stages.length - 1, 0, newStage)
-    setStages(newStages)
+    setStages(prev => {
+      const updated = [...prev]
+      const drawdown = updated.pop()!
+      updated.push({
+        id: uuidv4(),
+        name: `Pour ${updated.length}`,
+        targetWeight: waterGrams,
+        targetSeconds: 45,
+        temperature: temperature
+      })
+      updated.push(drawdown)
+      return applySmartSuggest(waterGrams, coffeeGrams, updated)
+    })
   }
 
   const removeStage = (id: string) => {
     const idx = stages.findIndex(s => s.id === id)
-    if (idx === -1 || idx === 0 || idx === stages.length - 1) return // Protect Blooming & Drawdown
+    if (idx === -1 || idx === 0 || idx === stages.length - 1) return
 
-    const removedWeight = stages[idx].targetWeight
-    const newStages = stages.filter(s => s.id !== id)
-    
-    // Transfer weight to the stage that moved into this position or the one after
-    const adjustIdx = Math.min(idx, newStages.length - 2)
-    newStages[adjustIdx] = { ...newStages[adjustIdx], targetWeight: parseFloat((newStages[adjustIdx].targetWeight + removedWeight).toFixed(1)) }
-    
-    setStages(newStages)
+    const newModified = new Set(modifiedStages)
+    newModified.delete(id)
+    setModifiedStages(newModified)
+
+    setStages(prev => {
+      const filtered = prev.filter(s => s.id !== id)
+      return applySmartSuggest(waterGrams, coffeeGrams, filtered)
+    })
   }
 
-  const totalStageWeight = parseFloat(stages.reduce((acc, s) => acc + s.targetWeight, 0).toFixed(1))
+  const totalStageWeight = stages[stages.length - 1]?.targetWeight || 0
   const totalStageTime = stages.reduce((acc, s) => acc + s.targetSeconds, 0)
   const weightMismatch = Math.abs(totalStageWeight - waterGrams) > 0.1
   const isHighComplexity = stages.length >= 6
+  const isInfused = name.toLowerCase().includes('infused')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -222,11 +342,28 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
 
         <div className={styles.content}>
           <form id="recipe-form" onSubmit={handleSubmit}>
-            {weightMismatch && (
+            {errorWarning && (
+              <div className={styles.validationBar} style={{ background: 'var(--error)', borderColor: 'var(--error)' }}>
+                <Info size={14} />
+                <span>{errorWarning}</span>
+              </div>
+            )}
+
+            {weightMismatch && !errorWarning && (
               <div className={styles.validationBar}>
                 <Info size={14} />
-                <span>Weight Mismatch: Stage total ({totalStageWeight}g) vs Target ({waterGrams}g)</span>
+                <span>Weight Mismatch: Sequence Total ({totalStageWeight.toFixed(1)}g) vs Target Yield ({waterGrams.toFixed(1)}g)</span>
               </div>
+            )}
+
+            {isInfused && (
+                <div className={styles.complexityWarning} style={{ borderColor: 'var(--cyber-amber)' }}>
+                    <Info size={24} color="var(--cyber-amber)" />
+                    <div>
+                        <strong>Barista Optimization Tip</strong>
+                        For Infused/Anaerobic processed beans, a longer blooming phase (**45s - 60s**) is recommended to enhance sweetness and allow the complex flavors to stabilize.
+                    </div>
+                </div>
             )}
 
             {isHighComplexity && coffeeGrams < 30 && (
@@ -287,7 +424,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                     type="number"
                     step="0.1"
                     className={styles.input}
-                    value={coffeeGrams}
+                    value={coffeeGrams || ''}
                     onChange={e => handleCoffeeChange(parseFloat(e.target.value) || 0)}
                   />
                 </div>
@@ -297,7 +434,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                     type="number"
                     step="0.1"
                     className={styles.input}
-                    value={waterGrams}
+                    value={waterGrams || ''}
                     onChange={e => handleWaterChange(parseFloat(e.target.value) || 0)}
                   />
                 </div>
@@ -307,7 +444,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                     type="number"
                     step="0.1"
                     className={styles.input}
-                    value={ratio}
+                    value={ratio || ''}
                     onChange={e => handleRatioChange(parseFloat(e.target.value) || 0)}
                   />
                 </div>
@@ -323,10 +460,37 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
               </div>
             </div>
 
-            {/* Stages Section */}
             <div className={styles.section} style={{ marginTop: 'var(--space-8)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div className={styles.sectionTitle}>Staging Sequence</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
+                    <div className={styles.sectionTitle}>Staging Sequence</div>
+                    <button 
+                      type="button" 
+                      onClick={standardizeSequence}
+                      className={styles.magicBtn}
+                      title="Apply Smart Balanced Sequence"
+                    >
+                      <Zap size={10} /> <span>Smart Suggest</span>
+                    </button>
+                </div>
+
+                <div className={styles.segmentedControl}>
+                  <button 
+                    type="button" 
+                    className={viewMode === 'total' ? styles.activeSegment : ''} 
+                    onClick={() => setViewMode('total')}
+                  >
+                    Total Mode
+                  </button>
+                  <button 
+                    type="button" 
+                    className={viewMode === 'step' ? styles.activeSegment : ''} 
+                    onClick={() => setViewMode('step')}
+                  >
+                    Step Mode
+                  </button>
+                </div>
+
                 <button 
                     type="button" 
                     onClick={addStage} 
@@ -340,6 +504,16 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
               <div className={styles.stageList}>
                 {stages.map((stage, idx) => {
                   const isMandatory = idx === 0 || idx === stages.length - 1;
+                  const prevTotalWeight = idx > 0 ? stages[idx - 1].targetWeight : 0
+                  const displayWeight = viewMode === 'step' 
+                    ? roundToOne(stage.targetWeight - prevTotalWeight) 
+                    : stage.targetWeight
+
+                  const cumulativeSeconds = stages.slice(0, idx + 1).reduce((acc, s) => acc + s.targetSeconds, 0)
+                  const displayTime = viewMode === 'total' 
+                    ? formatTime(cumulativeSeconds) 
+                    : stage.targetSeconds
+
                   return (
                     <motion.div layout key={stage.id} className={styles.stageItem}>
                       <div className={styles.stageNum}>{idx + 1}</div>
@@ -354,26 +528,56 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                         />
                       </div>
                       <div style={{ position: 'relative' }}>
-                        <div className={styles.fieldLabel}><Droplets size={8} /> Weight</div>
-                        <input 
-                          type="number"
-                          className={styles.input}
-                          style={{ padding: '6px 10px', fontSize: '12px', width: '100%' }}
-                          value={stage.targetWeight}
-                          onChange={e => updateStage(stage.id, { targetWeight: parseFloat(e.target.value) || 0 })}
-                        />
-                        <span style={{ position: 'absolute', right: 8, bottom: 8, fontSize: '9px', opacity: 0.4 }}>g</span>
+                        <div className={styles.fieldLabel}>
+                          <Droplets size={8} /> Weight
+                          {!modifiedStages.has(stage.id) && stage.name !== 'Drawdown' && <span className={styles.autoTag}>Auto</span>}
+                        </div>
+                        <div style={{ position: 'relative' }}>
+                          {viewMode === 'step' && stage.name !== 'Drawdown' && (
+                            <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: 'var(--cyber-teal)', pointerEvents: 'none' }}>+</span>
+                          )}
+                          <input 
+                            type="number"
+                            step="0.1"
+                            className={styles.input}
+                            style={{ 
+                              padding: '6px 10px', 
+                              paddingLeft: (viewMode === 'step' && stage.name !== 'Drawdown') ? '20px' : '10px',
+                              fontSize: '12px', 
+                              width: '100%', 
+                              opacity: stage.name === 'Drawdown' ? 0.4 : 1 
+                            }}
+                            value={stage.name === 'Drawdown' ? "0" : (displayWeight || '')}
+                            readOnly={stage.name === 'Drawdown'}
+                            onChange={e => {
+                                const val = parseFloat(e.target.value) || 0
+                                if (viewMode === 'step') {
+                                    handleStageWeightUpdate(stage.id, roundToOne(prevTotalWeight + val))
+                                } else {
+                                    handleStageWeightUpdate(stage.id, val)
+                                }
+                            }}
+                          />
+                          <span style={{ position: 'absolute', right: 8, bottom: 8, fontSize: '9px', opacity: 0.4 }}>g</span>
+                        </div>
                       </div>
                       <div style={{ position: 'relative' }}>
-                        <div className={styles.fieldLabel}><Timer size={8} /> Time</div>
-                        <input 
-                          type="number"
-                          className={styles.input}
-                          style={{ padding: '6px 10px', fontSize: '12px', width: '100%' }}
-                          value={stage.targetSeconds}
-                          onChange={e => updateStage(stage.id, { targetSeconds: parseInt(e.target.value) || 0 })}
-                        />
-                        <span style={{ position: 'absolute', right: 8, bottom: 8, fontSize: '9px', opacity: 0.4 }}>s</span>
+                        <div className={styles.fieldLabel}>
+                          <Timer size={8} /> Time
+                          {!modifiedStages.has(stage.id) && <span className={styles.autoTag}>Auto</span>}
+                        </div>
+                        <div style={{ position: 'relative' }}>
+                          <input 
+                            type="text"
+                            className={styles.input}
+                            style={{ padding: '6px 10px', fontSize: '12px', width: '100%' }}
+                            value={displayTime || ''}
+                            onChange={e => handleStageTimeUpdate(stage.id, e.target.value)}
+                          />
+                          <span style={{ position: 'absolute', right: 8, bottom: 8, fontSize: '9px', opacity: 0.4 }}>
+                              {viewMode === 'total' ? 'at' : 'sec'}
+                          </span>
+                        </div>
                       </div>
                       <button 
                         type="button" 
@@ -396,7 +600,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                 </div>
                 <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
                   <Droplets size={14} color="var(--cyber-amber)" />
-                  <span style={{ fontSize: '11px', fontWeight: 700 }}>{totalStageWeight}g / {waterGrams}g</span>
+                  <span style={{ fontSize: '11px', fontWeight: 700 }}>{totalStageWeight.toFixed(1)}g / {waterGrams.toFixed(1)}g</span>
                 </div>
               </div>
             </div>

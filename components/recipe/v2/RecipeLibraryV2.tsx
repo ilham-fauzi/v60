@@ -2,9 +2,10 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Coffee, Ghost, ArrowRight, Trash2, Copy, Edit3 } from 'lucide-react'
+import { Plus, Coffee, Ghost, ArrowRight, Trash2, Copy, Edit3, Share2 } from 'lucide-react'
 import { useRecipeStore } from '@/stores/RecipeStore'
 import { useBrewStore } from '@/stores/BrewStore'
+import { encodeRecipeForSharing, generateRecipeSlug } from '@/utils/recipe-sharing'
 import type { Recipe } from '@/types'
 
 import styles from './RecipeLibraryV2.module.css'
@@ -151,6 +152,19 @@ function RecipeV2Card({
   onDelete?: () => void 
 }) {
   const [isHovered, setIsHovered] = React.useState(false)
+  const [showCopyFeedback, setShowCopyFeedback] = React.useState(false)
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const encoded = encodeRecipeForSharing(recipe)
+    const slug = generateRecipeSlug(recipe)
+    const url = `${window.location.origin}/b/${slug}?r=${encoded}`
+    
+    navigator.clipboard.writeText(url).then(() => {
+      setShowCopyFeedback(true)
+      setTimeout(() => setShowCopyFeedback(false), 2000)
+    })
+  }
 
   return (
     <motion.div
@@ -202,6 +216,45 @@ function RecipeV2Card({
                 title={recipe.id.startsWith('preset-') ? "Clone & Edit" : "Edit Formula"}
               >
                 <Edit3 size={14} />
+              </button>
+              <button 
+                onClick={handleShare}
+                style={{ 
+                  background: 'rgba(0,255,180,0.05)', 
+                  border: 'none', 
+                  borderRadius: 6, 
+                  padding: 6, 
+                  color: 'var(--cyber-teal)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  position: 'relative'
+                }}
+                className="hover-bright"
+                title="Share Kinetic Formula"
+              >
+                <Share2 size={14} />
+                {showCopyFeedback && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: -25 }}
+                    exit={{ opacity: 0 }}
+                    style={{ 
+                      position: 'absolute', 
+                      left: '50%', 
+                      transform: 'translateX(-50%)',
+                      background: 'var(--cyber-teal)',
+                      color: '#000',
+                      fontSize: '8px',
+                      fontWeight: 900,
+                      padding: '2px 6px',
+                      whiteSpace: 'nowrap',
+                      borderRadius: 4,
+                      boxShadow: '0 0 10px rgba(0,255,180,0.3)'
+                    }}
+                  >
+                    LINK COPIED
+                  </motion.div>
+                )}
               </button>
               {onDelete && (
                 <button 

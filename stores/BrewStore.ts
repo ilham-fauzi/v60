@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { devtools, subscribeWithSelector } from 'zustand/middleware'
+import { devtools, subscribeWithSelector, persist, createJSONStorage } from 'zustand/middleware'
 import type {
   BrewState,
   WeightDataPoint,
@@ -54,158 +54,164 @@ const initialState: BrewState = {
 
 export const useBrewStore = create<BrewState & BrewActions>()(
   devtools(
-    subscribeWithSelector((set, get) => ({
-      ...initialState,
+    persist(
+      subscribeWithSelector((set, get) => ({
+        ...initialState,
 
-      setScaleConnection: (connection) => set({ scaleConnection: connection }),
+        setScaleConnection: (connection) => set({ scaleConnection: connection }),
 
-      onWeightUpdate: (weight) => {
-        const state = get()
-        if (!state.isBrewing || state.isPaused) {
-          set({ currentWeight: weight })
-          return
-        }
-        const now = Date.now()
-        const startTime = state.currentSession?.startedAt
-          ? new Date(state.currentSession.startedAt).getTime()
-          : now
-        const timestamp = now - startTime
-        const flowRate = computeFlowRate(state.history, weight, now)
-        const newPoint: WeightDataPoint = { timestamp, weight, flowRate }
-        set((s) => ({
-          currentWeight: weight,
-          currentFlowRate: flowRate,
-          history: [...s.history, newPoint],
-        }))
-      },
-
-      tare: () => set({ currentWeight: 0, currentFlowRate: 0 }),
-
-      toggleBrew: () => {
-        const state = get()
-        if (!state.isBrewing) {
-          const session: BrewSession = {
-            id: uuidv4(),
-            recipeId: state.activeRecipe?.id ?? 'manual',
-            startedAt: new Date().toISOString(),
-            history: [],
-            finalWeight: 0,
+        onWeightUpdate: (weight) => {
+          const state = get()
+          if (!state.isBrewing || state.isPaused) {
+            set({ currentWeight: weight })
+            return
           }
-          set({ 
-            isBrewing: true, 
-            isPaused: false, 
-            elapsedTime: 0, 
-            totalElapsedTime: 0,
-            currentStageIndex: 0, 
-            history: [], 
-            currentSession: session 
-          })
-        } else {
-          const { currentSession, currentWeight, history } = state
-          if (currentSession) {
-            set({ isBrewing: false, currentSession: { ...currentSession, completedAt: new Date().toISOString(), finalWeight: currentWeight, history } })
-          } else {
-            set({ isBrewing: false })
-          }
-        }
-      },
+          const now = Date.now()
+          const startTime = state.currentSession?.startedAt
+            ? new Date(state.currentSession.startedAt).getTime()
+            : now
+          const timestamp = now - startTime
+          const flowRate = computeFlowRate(state.history, weight, now)
+          const newPoint: WeightDataPoint = { timestamp, weight, flowRate }
+          set((s) => ({
+            currentWeight: weight,
+            currentFlowRate: flowRate,
+            history: [...s.history, newPoint],
+          }))
+        },
 
-      pauseBrew: () => set({ isPaused: true }),
-      resumeBrew: () => set({ isPaused: false }),
+        tare: () => set({ currentWeight: 0, currentFlowRate: 0 }),
 
-      stopBrew: async () => {
-        const { currentSession, currentWeight, history } = get()
-        if (!currentSession) {
-          set({ isBrewing: false, isPaused: false, currentFlowRate: 0 })
-          return
-        }
-
-        const completedSession = {
-          ...currentSession,
-          completedAt: new Date().toISOString(),
-          finalWeight: currentWeight,
-          history
-        }
-
-        set({
-          isBrewing: false,
-          isPaused: false,
-          currentSession: completedSession,
-          currentFlowRate: 0,
-        })
-
-        try {
-          await fetch('/api/sessions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(completedSession),
-          })
-        } catch (error) {
-          console.error('Failed to save session to SQLite:', error)
-        }
-      },
-
-      tick: () => {
-        const { isBrewing, isPaused, elapsedTime, totalElapsedTime, activeRecipe, currentStageIndex } = get()
-        if (!isBrewing || isPaused) return
-
-        const nextElapsedTime = elapsedTime + 1
-        const nextTotalElapsedTime = totalElapsedTime + 1
-        const currentStage = activeRecipe?.stages[currentStageIndex]
-
-        if (currentStage && nextElapsedTime >= currentStage.targetSeconds) {
-          const isLastStage = currentStageIndex === (activeRecipe?.stages.length ?? 0) - 1
-          if (isLastStage) {
-            // Final stage complete, stop the clock
+        toggleBrew: () => {
+          const state = get()
+          if (!state.isBrewing) {
+            const session: BrewSession = {
+              id: uuidv4(),
+              recipeId: state.activeRecipe?.id ?? 'manual',
+              startedAt: new Date().toISOString(),
+              history: [],
+              finalWeight: 0,
+            }
             set({ 
-              isPaused: true, 
-              elapsedTime: currentStage.targetSeconds,
-              totalElapsedTime: nextTotalElapsedTime 
+              isBrewing: true, 
+              isPaused: false, 
+              elapsedTime: 0, 
+              totalElapsedTime: 0,
+              currentStageIndex: 0, 
+              history: [], 
+              currentSession: session 
             })
           } else {
-            get().nextStage()
-            set({ totalElapsedTime: nextTotalElapsedTime })
+            const { currentSession, currentWeight, history } = state
+            if (currentSession) {
+              set({ isBrewing: false, currentSession: { ...currentSession, completedAt: new Date().toISOString(), finalWeight: currentWeight, history } })
+            } else {
+              set({ isBrewing: false })
+            }
           }
-        } else {
-          set({ elapsedTime: nextElapsedTime, totalElapsedTime: nextTotalElapsedTime })
-        }
-      },
+        },
 
-      nextStage: () => {
-        const { activeRecipe, currentStageIndex } = get()
-        if (!activeRecipe) return
-        const nextIndex = currentStageIndex + 1
-        if (nextIndex < activeRecipe.stages.length) {
-          set({ 
-            currentStageIndex: nextIndex,
-            elapsedTime: 0 
+        pauseBrew: () => set({ isPaused: true }),
+        resumeBrew: () => set({ isPaused: false }),
+
+        stopBrew: async () => {
+          const { currentSession, currentWeight, history } = get()
+          if (!currentSession) {
+            set({ isBrewing: false, isPaused: false, currentFlowRate: 0 })
+            return
+          }
+
+          const completedSession = {
+            ...currentSession,
+            completedAt: new Date().toISOString(),
+            finalWeight: currentWeight,
+            history
+          }
+
+          set({
+            isBrewing: false,
+            isPaused: false,
+            currentSession: completedSession,
+            currentFlowRate: 0,
           })
-        }
-      },
 
-      setActiveRecipe: (recipe) => set({ activeRecipe: recipe, targetWeight: recipe?.waterGrams ?? 0 }),
+          try {
+            await fetch('/api/sessions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(completedSession),
+            })
+          } catch (error) {
+            console.error('Failed to save session to SQLite:', error)
+          }
+        },
 
-      toggleFocusMode: () => set((s) => ({ isFocusMode: !s.isFocusMode })),
-      
-      toggleSidebar: () => set((s) => {
-        const nextState = !s.isSidebarCollapsed
-        // If expanding, make sure we aren't in focus mode
-        return { isSidebarCollapsed: nextState }
-      }),
+        tick: () => {
+          const { isBrewing, isPaused, elapsedTime, totalElapsedTime, activeRecipe, currentStageIndex } = get()
+          if (!isBrewing || isPaused) return
 
-      resetSession: () => set({ ...initialState, scaleConnection: get().scaleConnection, activeRecipe: get().activeRecipe }),
+          const nextElapsedTime = elapsedTime + 1
+          const nextTotalElapsedTime = totalElapsedTime + 1
+          const currentStage = activeRecipe?.stages[currentStageIndex]
 
-      getNextStage: (elapsedTime) => {
-        const { activeRecipe, currentStageIndex } = get()
-        if (!activeRecipe) return null
-        const stage = activeRecipe.stages[currentStageIndex]
-        if (!stage) return null
-        if (elapsedTime >= stage.targetSeconds) {
-          return activeRecipe.stages[currentStageIndex + 1]?.name ?? null
-        }
-        return null
-      },
-    })),
-    { name: 'BrewStore' }
+          if (currentStage && nextElapsedTime >= currentStage.targetSeconds) {
+            const isLastStage = currentStageIndex === (activeRecipe?.stages.length ?? 0) - 1
+            if (isLastStage) {
+              // Final stage complete, stop the clock
+              set({ 
+                isPaused: true, 
+                elapsedTime: currentStage.targetSeconds,
+                totalElapsedTime: nextTotalElapsedTime 
+              })
+            } else {
+              get().nextStage()
+              set({ totalElapsedTime: nextTotalElapsedTime })
+            }
+          } else {
+            set({ elapsedTime: nextElapsedTime, totalElapsedTime: nextTotalElapsedTime })
+          }
+        },
+
+        nextStage: () => {
+          const { activeRecipe, currentStageIndex } = get()
+          if (!activeRecipe) return
+          const nextIndex = currentStageIndex + 1
+          if (nextIndex < activeRecipe.stages.length) {
+            set({ 
+              currentStageIndex: nextIndex,
+              elapsedTime: 0 
+            })
+          }
+        },
+
+        setActiveRecipe: (recipe) => set({ activeRecipe: recipe, targetWeight: recipe?.waterGrams ?? 0 }),
+
+        toggleFocusMode: () => set((s) => ({ isFocusMode: !s.isFocusMode })),
+        
+        toggleSidebar: () => set((s) => {
+          const nextState = !s.isSidebarCollapsed
+          // If expanding, make sure we aren't in focus mode
+          return { isSidebarCollapsed: nextState }
+        }),
+
+        resetSession: () => set({ ...initialState, scaleConnection: get().scaleConnection, activeRecipe: get().activeRecipe }),
+
+        getNextStage: (elapsedTime) => {
+          const { activeRecipe, currentStageIndex } = get()
+          if (!activeRecipe) return null
+          const stage = activeRecipe.stages[currentStageIndex]
+          if (!stage) return null
+          if (elapsedTime >= stage.targetSeconds) {
+            return activeRecipe.stages[currentStageIndex + 1]?.name ?? null
+          }
+          return null
+        },
+      })),
+      {
+        name: 'brewmaster-session',
+        storage: createJSONStorage(() => localStorage),
+        // We only want to persist certain parts, but for simplicity let's do all
+      }
+    )
   )
 )

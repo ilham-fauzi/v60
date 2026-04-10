@@ -16,12 +16,12 @@ const DEFAULT_RECIPES = [
     beanOrigin: 'General Purpose',
     aiGenerated: false,
     stages: [
-      { name: 'Bloom', targetWeight: 30, targetSeconds: 45, temperature: 93, notes: 'Saturate all grounds gently' },
-      { name: 'Pour 1', targetWeight: 60, targetSeconds: 30, temperature: 93, notes: 'Slow spiral pour' },
-      { name: 'Pour 2', targetWeight: 60, targetSeconds: 30, temperature: 93 },
-      { name: 'Pour 3', targetWeight: 45, targetSeconds: 25, temperature: 92 },
-      { name: 'Pour 4', targetWeight: 30, targetSeconds: 20, temperature: 92 },
-      { name: 'Drawdown', targetWeight: 0, targetSeconds: 60, temperature: 0, notes: 'Wait for full drainage' },
+      { name: 'Blooming', targetWeight: 30, targetSeconds: 45, temperature: 93, notes: 'Saturate all grounds gently' },
+      { name: 'Main Pour 1', targetWeight: 90, targetSeconds: 30, temperature: 93, notes: 'Slow spiral pour' },
+      { name: 'Main Pour 2', targetWeight: 150, targetSeconds: 30, temperature: 93 },
+      { name: 'Main Pour 3', targetWeight: 195, targetSeconds: 25, temperature: 92 },
+      { name: 'Main Pour 4', targetWeight: 225, targetSeconds: 20, temperature: 92 },
+      { name: 'Drawdown', targetWeight: 225, targetSeconds: 60, temperature: 0, notes: 'Wait for full drainage' },
     ],
   },
   {
@@ -35,10 +35,10 @@ const DEFAULT_RECIPES = [
     beanOrigin: 'General Purpose',
     aiGenerated: false,
     stages: [
-      { name: 'Bloom', targetWeight: 50, targetSeconds: 45, temperature: 100 },
-      { name: 'Agitate', targetWeight: 0, targetSeconds: 15, temperature: 0, notes: 'Swirl gently to settle' },
-      { name: 'Main Pour', targetWeight: 200, targetSeconds: 30, temperature: 100, notes: 'One continuous pour' },
-      { name: 'Drawdown', targetWeight: 0, targetSeconds: 90, temperature: 0 },
+      { name: 'Blooming', targetWeight: 50, targetSeconds: 45, temperature: 100 },
+      { name: 'Agitate', targetWeight: 50, targetSeconds: 15, temperature: 0, notes: 'Swirl gently to settle' },
+      { name: 'Main Pour', targetWeight: 250, targetSeconds: 30, temperature: 100, notes: 'One continuous pour' },
+      { name: 'Drawdown', targetWeight: 250, targetSeconds: 90, temperature: 0 },
     ],
   },
   {
@@ -52,10 +52,10 @@ const DEFAULT_RECIPES = [
     beanOrigin: 'General Purpose',
     aiGenerated: false,
     stages: [
-      { name: 'Bloom', targetWeight: 36, targetSeconds: 30, temperature: 85 },
-      { name: 'Fill', targetWeight: 164, targetSeconds: 30, temperature: 85 },
-      { name: 'Steep', targetWeight: 0, targetSeconds: 60, temperature: 0, notes: 'Stir and steep' },
-      { name: 'Press', targetWeight: 0, targetSeconds: 30, temperature: 0, notes: 'Flip and press slowly' },
+      { name: 'Blooming', targetWeight: 36, targetSeconds: 30, temperature: 85 },
+      { name: 'Fill', targetWeight: 200, targetSeconds: 30, temperature: 85 },
+      { name: 'Steep', targetWeight: 200, targetSeconds: 60, temperature: 0, notes: 'Stir and steep' },
+      { name: 'Press', targetWeight: 200, targetSeconds: 30, temperature: 0, notes: 'Flip and press slowly' },
     ],
   },
 ]

@@ -3,17 +3,23 @@
 import { useState, useEffect } from 'react'
 import { useBrewStore } from '@/stores/BrewStore'
 import { useRecipeStore } from '@/stores/RecipeStore'
+import dynamic from 'next/dynamic'
 import { DesktopLayout } from '@/components/layout/v2/DesktopLayout'
-import { BrewDashboardV2 } from '@/components/brew/v2/BrewDashboardV2'
+import { DashboardSkeleton } from '@/components/brew/v2/BrewDashboardV2'
+const BrewDashboardV2 = dynamic(() => import('@/components/brew/v2/BrewDashboardV2').then(mod => mod.BrewDashboardV2), { 
+  ssr: false,
+  loading: () => <DashboardSkeleton />
+})
 import { RecipeLibraryV2 } from '@/components/recipe/v2/RecipeLibraryV2'
-import { RadarFlavorChart } from '@/components/viz/RadarFlavorChart'
-import { AIInsightPanel } from '@/components/ai/AIInsightPanel'
 import { PostBrewJournal } from '@/components/journal/PostBrewJournal'
+import { Search, Coffee, Zap } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('brew')
-  const { isFocusMode, toggleFocusMode, activeRecipe, tare } = useBrewStore()
-  const { initRecipes } = useRecipeStore()
+  const [searchQuery, setSearchQuery] = useState('')
+  const { isFocusMode, toggleFocusMode, activeRecipe, setActiveRecipe, tare } = useBrewStore()
+  const { initRecipes, recipes } = useRecipeStore()
 
   // Initialize Data from SQLite
   useEffect(() => {
@@ -40,23 +46,99 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [toggleFocusMode, tare])
 
-  const IntelligencePanel = (
-    <>
-      <RadarFlavorChart />
-      <div style={{ marginTop: 'var(--space-6)' }}>
-        <div className="cyber-panel-header">AI Intelligence</div>
-        <div className="v2-glass" style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
-          <AIInsightPanel />
+  const filteredRecipes = recipes.filter(r => 
+    r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.method.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const FormulaDatabase = (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 'var(--space-4)' }}>
+      <div className="cyber-panel-header">Formula Database</div>
+      
+      {/* Search Header */}
+      <div className="v2-glass" style={{ padding: 'var(--space-3)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+        <Search size={14} color="var(--text-tertiary)" />
+        <input 
+          type="text" 
+          placeholder="Filter formulas..." 
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            color: '#fff', 
+            fontSize: 'var(--text-xs)', 
+            width: '100%',
+            outline: 'none'
+          }} 
+        />
+      </div>
+
+      {/* Scrollable List */}
+      <div style={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 'var(--space-3)',
+        paddingRight: 'var(--space-2)',
+        maxHeight: 'calc(100vh - 280px)' // Responsive height for sidebar
+      }} className="hide-scrollbar">
+        {filteredRecipes.map((r) => {
+          const isActive = activeRecipe?.id === r.id
+          return (
+            <motion.div
+              key={r.id}
+              whileHover={{ x: 4 }}
+              onClick={() => {
+                setActiveRecipe(r)
+                if (activeTab !== 'brew') setActiveTab('brew')
+              }}
+              className="v2-glass"
+              style={{
+                padding: 'var(--space-3)',
+                borderRadius: 'var(--radius-lg)',
+                cursor: 'pointer',
+                border: isActive ? '1px solid var(--cyber-amber)' : '1px solid var(--cyber-border)',
+                background: isActive ? 'rgba(255, 191, 0, 0.05)' : 'rgba(255,255,255,0.02)',
+                transition: 'all 0.2s'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: isActive ? 'var(--cyber-amber)' : 'var(--text-primary)' }}>
+                  {r.name}
+                </span>
+                <span style={{ fontSize: '9px', fontWeight: 900, color: 'var(--text-tertiary)' }}>
+                  {r.method.toUpperCase()}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-1)', fontSize: '10px', color: 'var(--text-tertiary)' }}>
+                <span>{r.coffeeGrams}g</span>
+                <span>•</span>
+                <span>1:{r.ratio}</span>
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+
+      {/* System Stats Block */}
+      <div className="v2-glass" style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-xl)', marginTop: 'auto' }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--cyber-teal)', opacity: 0.6, display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <Zap size={10} /> [NODE] KINETIC_STABLE
+          </div>
+          <div>[IO] SCALE_STREAM_CONNECTED</div>
         </div>
       </div>
-    </>
+    </div>
   )
 
   return (
     <DesktopLayout 
       activeTab={activeTab} 
       onTabChange={setActiveTab}
-      rightContent={IntelligencePanel}
+      rightContent={FormulaDatabase}
       isFocusMode={isFocusMode}
     >
       {/* Primary Workspace */}
@@ -71,23 +153,6 @@ export default function Home() {
             <PostBrewJournal />
           </div>
         )}
-        
-        {/* Placeholder for AI Tab if needed, though it's now in the side panel */}
-        {activeTab === 'ai' && (
-          <div className="v2-glass" style={{ padding: 'var(--space-8)', borderRadius: 'var(--radius-xl)' }}>
-            <AIInsightPanel />
-          </div>
-        )}
-
-        {/* Telemetry Footer Block */}
-        <div className="v2-glass" style={{ padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)' }}>
-          <div className="cyber-panel-header">System Diagnostics</div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--cyber-teal)', opacity: 0.6, display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-            <div>[STATUS] KINETIC ENGINE STABLE</div>
-            <div>[IO] SCALE_STREAM_ACTIVE</div>
-            <div>[AI] NEURAL_BRIDGE_READY</div>
-          </div>
-        </div>
       </div>
     </DesktopLayout>
   )

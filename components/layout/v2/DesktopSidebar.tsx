@@ -1,14 +1,13 @@
 'use client'
 
-import { Coffee, Library, Cpu, History, Settings, Zap, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Coffee, Library, History, Settings, Zap, ChevronLeft, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useBrewStore } from '@/stores/BrewStore'
 import styles from './v2.module.css'
 
 const NAV_ITEMS = [
-  { id: 'brew', icon: Coffee, label: 'Brewing', path: '/desktop-v2' },
+  { id: 'brew', icon: Coffee, label: 'Brewing', path: '/' },
   { id: 'recipes', icon: Library, label: 'Recipes', path: '#recipes' },
-  { id: 'ai', icon: Cpu, label: 'AI Analysis', path: '#ai' },
   { id: 'history', icon: History, label: 'History', path: '#history' },
 ]
 
@@ -25,7 +24,7 @@ export function DesktopSidebar({ activeTab, onTabChange }: { activeTab: string, 
       {/* Brand */}
       <div className={styles.sidebarBrand}>
         <div className={styles.brandLogo}>
-          <Zap size={18} color="#000" fill="#000" />
+          <Coffee size={18} color="#000" fill="#000" />
         </div>
         {!isCollapsed && (
           <motion.span 
@@ -33,7 +32,7 @@ export function DesktopSidebar({ activeTab, onTabChange }: { activeTab: string, 
             animate={{ opacity: 1, x: 0 }}
             className={styles.brandText}
           >
-            BREWFORCE
+            V60
           </motion.span>
         )}
       </div>
