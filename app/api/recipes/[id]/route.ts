@@ -3,10 +3,10 @@ import prisma from '@/services/prisma'
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await context.params
     const data = await request.json()
     const { stages, ...recipeData } = data
 
@@ -45,10 +45,10 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await context.params
     await prisma.recipe.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {
