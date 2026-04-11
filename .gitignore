@@ -1,5 +1,6 @@
 # Dependencies
 node_modules
+package-lock.json
 /.pnp
 .pnp.js
 
@@ -34,6 +35,7 @@ yarn-error.log*
 next-env.d.ts
 
 # SQLite Database
+dev.db
 prisma/*.db
 prisma/*.db-journal
 prisma/*.db-shm
