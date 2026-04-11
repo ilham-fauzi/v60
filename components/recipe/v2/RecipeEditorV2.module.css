@@ -10,12 +10,13 @@
   display: flex;
   justify-content: flex-end;
   animation: fadeIn 0.3s ease;
+  height: 100dvh; /* Use dvh to overcome mobile browser chrome UI */
 }
 
 .panel {
   width: 640px;
-  max-width: 95vw;
-  height: 100vh;
+  max-width: 100vw;
+  height: 100%;
   background: rgba(13, 14, 15, 0.98);
   border-left: 1px solid var(--cyber-border);
   display: flex;
@@ -307,3 +308,56 @@
   color: #000 !important;
   box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .overlay {
+    justify-content: center;
+  }
+
+  .panel {
+    border-left: none;
+    border-radius: 0;
+    margin-top: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+  }
+
+  .content {
+    padding: var(--space-4) var(--space-4) calc(var(--space-12) + 20px);
+    overflow-x: hidden;
+  }
+
+  .footer {
+    padding: var(--space-4);
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 24px));
+    position: relative;
+    z-index: 10;
+  }
+
+  .stageItem {
+    grid-template-columns: 20px 1fr 1fr 1fr 24px;
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+
+  .grid {
+    gap: var(--space-3);
+  }
+}
+
+@media (max-width: 480px) {
+  .stageItem {
+    /* Compress grid items slightly more on very small iPhones */
+    grid-template-columns: 16px 1fr 1fr 1fr 20px;
+    padding: var(--space-2);
+  }
+  
+  .input, .select {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+}
+
+
