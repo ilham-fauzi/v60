@@ -43,6 +43,7 @@ prisma/*.db-wal
 
 # Prisma
 /app/generated/prisma
+/docs
 
 # macOS
 .DS_Store
