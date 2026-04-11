@@ -24,6 +24,7 @@ interface BrewActions {
   toggleSidebar: () => void
   resetSession: () => void
   getNextStage: (elapsedTime: number) => string | null
+  setReverseDrawdownEnabled: (enabled: boolean) => void
 }
 
 function computeFlowRate(history: WeightDataPoint[], currentWeight: number, now: number): number {
@@ -50,6 +51,7 @@ const initialState: BrewState = {
   isFocusMode: false,
   isSidebarCollapsed: false,
   totalElapsedTime: 0,
+  reverseDrawdownEnabled: true,
 }
 
 export const useBrewStore = create<BrewState & BrewActions>()(
@@ -206,6 +208,7 @@ export const useBrewStore = create<BrewState & BrewActions>()(
           }
           return null
         },
+        setReverseDrawdownEnabled: (enabled) => set({ reverseDrawdownEnabled: enabled }),
       })),
       {
         name: 'brewmaster-session',

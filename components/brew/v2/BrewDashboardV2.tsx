@@ -36,13 +36,17 @@ export function DashboardSkeleton() {
 function LiquidPhaseOverlay({ 
   elapsedTime, 
   targetSeconds, 
-  stageName 
+  stageName,
+  reverseDrawdownEnabled
 }: { 
   elapsedTime: number, 
   targetSeconds: number, 
-  stageName: string 
+  stageName: string,
+  reverseDrawdownEnabled?: boolean
 }) {
-  const liquidFillHeight = Math.min(100, (elapsedTime / targetSeconds) * 100)
+  const isDrawdown = stageName.toLowerCase().includes('drawdown')
+  const percentage = Math.min(100, (elapsedTime / targetSeconds) * 100)
+  const liquidFillHeight = (isDrawdown && reverseDrawdownEnabled) ? Math.max(0, 100 - percentage) : percentage
   const remaining = Math.max(0, targetSeconds - Math.floor(elapsedTime))
   
   // Static random seeds for bubble animation to prevent reshuffling on every frame update
@@ -127,6 +131,8 @@ export function BrewDashboardV2({ recipe }: Props) {
     nextStage,
     tare,
     tick,
+    reverseDrawdownEnabled,
+    setReverseDrawdownEnabled,
   } = useBrewStore()
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -216,6 +222,28 @@ export function BrewDashboardV2({ recipe }: Props) {
               {recipe?.name || 'Ethiopia Yirgacheffe'} {recipe?.method || 'V60'}
               <span style={{ color: 'var(--cyber-amber)' }}>⤢</span>
             </h1>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+            <div 
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 'var(--space-2)', 
+                background: 'rgba(255,255,255,0.05)', 
+                padding: '4px 10px', 
+                borderRadius: 'var(--radius-lg)',
+                cursor: 'pointer',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}
+              onClick={() => setReverseDrawdownEnabled(!reverseDrawdownEnabled)}
+              title="Toggle Reverse Drawdown"
+            >
+              <div style={{ width: 12, height: 12, borderRadius: 2, background: reverseDrawdownEnabled ? 'var(--cyber-teal)' : 'rgba(255,255,255,0.2)', transition: 'all 0.3s' }} />
+              <span style={{ fontSize: '9px', fontWeight: 800, color: reverseDrawdownEnabled ? 'var(--cyber-teal)' : 'var(--text-tertiary)', letterSpacing: '0.05em' }}>
+                REVERSE DRAWDOWN
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -364,7 +392,13 @@ export function BrewDashboardV2({ recipe }: Props) {
                     <motion.div 
                       style={{ height: '100%', background: 'var(--cyber-amber)', borderRadius: 2 }}
                       initial={{ width: 0 }}
-                      animate={{ width: `${Math.min(100, (elapsedTime / stage.targetSeconds) * 100)}%` }}
+                      animate={{ 
+                        width: `${(() => {
+                          const isDrawdown = stage.name.toLowerCase().includes('drawdown')
+                          const p = Math.min(100, (elapsedTime / stage.targetSeconds) * 100)
+                          return (isDrawdown && reverseDrawdownEnabled) ? 100 - p : p
+                        })()}%` 
+                      }}
                       transition={{ ease: 'linear' }}
                     />
                   </div>
@@ -418,6 +452,7 @@ export function BrewDashboardV2({ recipe }: Props) {
           elapsedTime={elapsedTime}
           targetSeconds={currentStage.targetSeconds}
           stageName={currentStage.name}
+          reverseDrawdownEnabled={reverseDrawdownEnabled}
         />
       )}
     </div>

@@ -112,6 +112,7 @@ export interface BrewState {
   // UI
   isFocusMode: boolean
   isSidebarCollapsed: boolean
+  reverseDrawdownEnabled: boolean
 }
 
 export interface RecipeState {
