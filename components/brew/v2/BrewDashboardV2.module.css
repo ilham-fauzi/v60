@@ -1,7 +1,13 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-8);
+  width: 100%;
+}
+
+/* Liquid Overlay Classes */
+.liquidOverlayCtn {
+  display: none;
 }
 
 .container[data-loading="true"] {
@@ -40,7 +46,7 @@
 
 .metricsGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 2fr 1fr;
   gap: var(--space-6);
 }
 
@@ -55,6 +61,7 @@
   display: flex;
   gap: var(--space-4);
   align-items: center;
+  flex-wrap: wrap;
 }
 
 /* Responsiveness */
@@ -66,17 +73,17 @@
 
 @media (max-width: 1024px) {
   .metricsGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .metricsGrid {
     grid-template-columns: 1fr;
   }
   
   .metricValue {
-    font-size: 3.5rem;
+    font-size: 3rem;
   }
 
   .controlStrip {
@@ -85,5 +92,161 @@
 
   .controlStrip button {
     width: 100% !important;
+  }
+
+  /* HUD Mode Mobile Overrides (Active Brewing) */
+  .container.hudMode {
+    gap: var(--space-4);
+    padding-bottom: 90px; /* Make space for sticky controls */
+  }
+
+  .hudMode .hudHeader {
+    display: none; /* Hide header completely to save vertical space */
+  }
+
+  .hudMode .hudMetricsRight {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: var(--space-4) !important;
+    flex-direction: row !important;
+  }
+
+  .hudMode .hudMetricsRight > div {
+    padding: var(--space-4) !important;
+  }
+  
+  .hudMode .hudMetricsRight span:first-of-type {
+    font-size: 2rem !important; /* Scale down timer/flow numbers slightly to fit side-by-side */
+  }
+
+  .hudMode .controlStrip {
+    position: fixed;
+    bottom: 64px; /* Right above the bottom nav */
+    left: 0;
+    right: 0;
+    padding: var(--space-4) var(--space-4) var(--space-6) var(--space-4);
+    background: linear-gradient(to top, rgba(10, 10, 11, 0.95) 40%, rgba(10, 10, 11, 0));
+    z-index: 100;
+    flex-direction: row; /* Horizontal control strip on HUD */
+    flex-wrap: nowrap;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .hudMode .controlStrip button {
+    width: auto !important;
+    flex: 1; /* Distribute horizontal space evenly */
+  }
+
+  .hudMode .controlStrip button:nth-child(2) {
+    flex: 2; /* Center prominent button */
+  }
+
+  /* Liquid Timer Screen Overlay (Mobile Only) */
+  .liquidOverlayCtn {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40; /* Above metrics, below controls */
+    pointer-events: none; /* Passthrough clicks */
+  }
+
+  .liquidWave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    /* Gradient mapping depth */
+    background: linear-gradient(180deg, rgba(255, 191, 0, 0.3) 0%, rgba(200, 140, 0, 0.7) 100%);
+    box-shadow: 0 -4px 30px rgba(255, 191, 0, 0.2);
+    /* height is animated by framer-motion */
+  }
+
+  /* Animated SVG Wave Surfaces */
+  .waveSurface {
+    position: absolute;
+    top: -29px; /* Overlaps top of liquid perfectly */
+    left: 0;
+    width: 200vw; /* Double width for seamless horizontal scroll */
+    height: 30px;
+    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1000 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M0,50 C150,100 350,0 500,50 C650,100 850,0 1000,50 L1000,100 L0,100 Z" fill="rgba(255, 191, 0, 0.3)"/></svg>') repeat-x;
+    background-size: 50vw 100%;
+    animation: waveRoll 3s linear infinite;
+  }
+
+  .waveSurface2 {
+    position: absolute;
+    top: -39px; 
+    left: 0;
+    width: 200vw;
+    height: 40px;
+    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1000 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M0,50 C200,0 300,100 500,50 C700,0 800,100 1000,50 L1000,100 L0,100 Z" fill="rgba(255, 191, 0, 0.2)"/></svg>') repeat-x;
+    background-size: 50vw 100%;
+    animation: waveRoll 4.5s linear infinite reverse;
+  }
+
+  @keyframes waveRoll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50vw); }
+  }
+
+  /* Bubbles */
+  .bubblesCtn {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .bubble {
+    position: absolute;
+    bottom: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 191, 0, 0.2) 60%, transparent);
+    box-shadow: 0 0 6px rgba(255, 191, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .liquidTimerRing {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 191, 0, 0.4);
+    background: rgba(10, 10, 11, 0.4);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 50px rgba(255, 191, 0, 0.15), inset 0 0 20px rgba(255, 191, 0, 0.1);
+    z-index: 41;
+  }
+
+  .liquidTimerNumber {
+    font-size: 6rem;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--cyber-amber);
+    text-shadow: 0 0 15px rgba(255, 191, 0, 0.6);
+  }
+
+  .liquidTimerLabel {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    color: #fff;
+    text-transform: uppercase;
+    margin-top: var(--space-4);
   }
 }

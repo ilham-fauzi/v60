@@ -96,9 +96,33 @@ export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => v
         </button>
       </div>
 
+      {/* Lab Insights Banner */}
+      <div className="v2-glass" style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 'var(--space-3)', 
+        padding: 'var(--space-4)', 
+        marginBottom: 'var(--space-6)', 
+        borderLeft: '2px solid var(--cyber-amber)' 
+      }}>
+        <div style={{ padding: '6px', background: 'rgba(255,191,0,0.1)', borderRadius: 8, color: 'var(--cyber-amber)' }}>
+          <Coffee size={16} />
+        </div>
+        <div>
+          <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.1em', color: 'var(--cyber-amber)', marginRight: 'var(--space-2)' }}>
+            LABORATORY INSIGHTS
+          </span>
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
+            Optimized extraction protocol identified for Gesha varietals.
+          </span>
+        </div>
+      </div>
+
       {/* Grid Sections */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-        <div className="cyber-panel-header">Custom Formulations</div>
+        <div className="cyber-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Custom Formulations</span>
+        </div>
         <div className={styles.grid}>
           {custom.map((r) => (
             <RecipeV2Card 
@@ -183,135 +207,75 @@ function RecipeV2Card({
         boxShadow: isActive ? '0 0 20px rgba(255, 191, 0, 0.1)' : 'none'
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
-        <div style={{ 
-          width: 32, 
-          height: 32, 
-          borderRadius: 8, 
-          background: isActive ? 'var(--cyber-amber)' : 'rgba(255,255,255,0.05)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: isActive ? '#000' : 'var(--text-tertiary)'
-        }}>
-          <Coffee size={16} fill={isActive ? 'currentColor' : 'none'} />
-        </div>
-
-        {/* Action Controls */}
-        <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
-          {(isHovered || isActive) && (
-            <div style={{ display: 'flex', gap: 'var(--space-2)', marginRight: 'var(--space-2)' }}>
-              <button 
-                onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                style={{ 
-                  background: 'rgba(255,255,255,0.05)', 
-                  border: 'none', 
-                  borderRadius: 6, 
-                  padding: 6, 
-                  color: 'var(--text-tertiary)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-                className="hover-bright"
-                title={recipe.id.startsWith('preset-') ? "Clone & Edit" : "Edit Formula"}
-              >
-                <Edit3 size={14} />
-              </button>
-              <button 
-                onClick={handleShare}
-                style={{ 
-                  background: 'rgba(0,255,180,0.05)', 
-                  border: 'none', 
-                  borderRadius: 6, 
-                  padding: 6, 
-                  color: 'var(--cyber-teal)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  position: 'relative'
-                }}
-                className="hover-bright"
-                title="Share Kinetic Formula"
-              >
-                <Share2 size={14} />
-                {showCopyFeedback && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: -25 }}
-                    exit={{ opacity: 0 }}
-                    style={{ 
-                      position: 'absolute', 
-                      left: '50%', 
-                      transform: 'translateX(-50%)',
-                      background: 'var(--cyber-teal)',
-                      color: '#000',
-                      fontSize: '8px',
-                      fontWeight: 900,
-                      padding: '2px 6px',
-                      whiteSpace: 'nowrap',
-                      borderRadius: 4,
-                      boxShadow: '0 0 10px rgba(0,255,180,0.3)'
-                    }}
-                  >
-                    LINK COPIED
-                  </motion.div>
-                )}
-              </button>
-              {onDelete && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); if(confirm('Delete this formula?')) onDelete(); }}
-                  style={{ 
-                    background: 'rgba(255,0,0,0.05)', 
-                    border: 'none', 
-                    borderRadius: 6, 
-                    padding: 6, 
-                    color: 'rgba(255,100,100,0.6)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                  className="hover-bright"
-                  title="Delete Formula"
-                >
-                  <Trash2 size={14} />
-                </button>
-              )}
-            </div>
-          )}
-          
-          {recipe.aiGenerated && (
-            <div style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'var(--cyber-teal)', color: '#000' }}>AI SUGGEST</div>
-          )}
-          <div style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: 4, border: '1px solid var(--cyber-border)', color: 'var(--text-tertiary)' }}>{recipe.method.toUpperCase()}</div>
+      <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-6)' }}>
+        {recipe.aiGenerated && (
+          <div style={{ fontSize: '8px', fontWeight: 800, padding: '4px 6px', borderRadius: 4, background: 'var(--cyber-teal)', color: '#000', letterSpacing: '0.05em' }}>AI SUGGEST</div>
+        )}
+        <div style={{ fontSize: '8px', fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.1em', display: 'flex', flexDirection: 'column' }}>
+          <span>{recipe.beanOrigin ? 'SINGLE' : 'HERITAGE'}</span>
+          <span>{recipe.beanOrigin ? 'ORIGIN' : 'BLEND'}</span>
         </div>
       </div>
 
-      <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 800, marginBottom: '2px' }}>{recipe.name}</h3>
-      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', marginBottom: 'var(--space-4)' }}>{recipe.beanOrigin || 'Blend Profile Default'}</p>
+      <h3 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, marginBottom: 'var(--space-8)', lineHeight: 1.1 }}>{recipe.name}</h3>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-3)', background: 'rgba(255,255,255,0.02)', padding: 'var(--space-3)', borderRadius: 'var(--radius-lg)' }}>
+      <div className="responsive-grid-4" style={{ marginBottom: 'var(--space-8)' }}>
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 700 }}>DOSE</div>
-          <div style={{ fontWeight: 800, fontSize: 'var(--text-sm)' }}>{recipe.coffeeGrams}g</div>
+          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>DOSE</div>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>{recipe.coffeeGrams}g</div>
         </div>
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 700 }}>YIELD</div>
-          <div style={{ fontWeight: 800, fontSize: 'var(--text-sm)' }}>{recipe.waterGrams}g</div>
+          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>YIELD</div>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>{recipe.waterGrams}g</div>
         </div>
         <div>
-            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 700 }}>RATIO</div>
-            <div style={{ fontWeight: 800, fontSize: 'var(--text-sm)' }}>1:{recipe.ratio}</div>
+            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>RATIO</div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>1:{recipe.ratio}</div>
         </div>
         <div>
-            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 700 }}>TEMP</div>
-            <div style={{ fontWeight: 800, fontSize: 'var(--text-sm)' }}>{recipe.temperature}°C</div>
+            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>TEMP</div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--cyber-teal)' }}>{recipe.temperature}°C</div>
         </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {['A'].map(initial => (
+             <div key={initial} style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 600 }}>
+               {initial}
+             </div>
+          ))}
+        </div>
+        <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>LAST BREWED 1D AGO</div>
+      </div>
+
+      {/* Action Controls hidden unless hovered to keep UI clean, or place top right absolute */}
+      <div style={{ position: 'absolute', top: 'var(--space-4)', right: 'var(--space-4)', display: 'flex', gap: 'var(--space-2)', opacity: isHovered || isActive ? 1 : 0, transition: 'opacity 0.2s' }}>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
+          style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 4, padding: 4, color: 'var(--text-tertiary)', cursor: 'pointer' }}
+          title={recipe.id.startsWith('preset-') ? "Clone & Edit" : "Edit Formula"}
+        >
+          <Edit3 size={12} />
+        </button>
+        {onDelete && (
+          <button 
+            onClick={(e) => { e.stopPropagation(); if(confirm('Delete?')) onDelete(); }}
+            style={{ background: 'rgba(255,0,0,0.05)', border: 'none', borderRadius: 4, padding: 4, color: 'rgba(255,100,100,0.6)', cursor: 'pointer' }}
+            title="Delete Formula"
+          >
+            <Trash2 size={12} />
+          </button>
+        )}
       </div>
 
       {isActive && (
         <motion.div 
           layoutId="active-indicator"
-          style={{ position: 'absolute', bottom: -1, left: '20%', right: '20%', height: 2, background: 'var(--cyber-amber)', boxShadow: 'var(--cyber-glow-amber)' }} 
+          style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 2, background: 'var(--cyber-amber)' }} 
         />
       )}
     </motion.div>
+
   )
 }

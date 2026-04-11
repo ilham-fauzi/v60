@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { Coffee, Library, History, Settings, Zap, ChevronLeft, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useBrewStore } from '@/stores/BrewStore'
@@ -12,13 +13,21 @@ const NAV_ITEMS = [
 ]
 
 export function DesktopSidebar({ activeTab, onTabChange }: { activeTab: string, onTabChange: (id: string) => void }) {
+  const [mounted, setMounted] = React.useState(false)
   const isCollapsed = useBrewStore(s => s.isSidebarCollapsed)
   const toggleSidebar = useBrewStore(s => s.toggleSidebar)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // If not mounted, use default state (false) to match server
+  const collapsed = mounted ? isCollapsed : false
 
   return (
     <aside className={`${styles.sidebar} v2-glass`}>
       <button className={styles.collapseToggle} onClick={toggleSidebar}>
-        {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+        {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
       </button>
 
       {/* Brand */}
@@ -26,7 +35,7 @@ export function DesktopSidebar({ activeTab, onTabChange }: { activeTab: string, 
         <div className={styles.brandLogo}>
           <Coffee size={18} color="#000" fill="#000" />
         </div>
-        {!isCollapsed && (
+        {!collapsed && (
           <motion.span 
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -39,7 +48,14 @@ export function DesktopSidebar({ activeTab, onTabChange }: { activeTab: string, 
 
       {/* Navigation */}
       <nav className={styles.navContainer}>
-        {!isCollapsed && <div className={`${styles.sidebarNavHeader} cyber-panel-header`}>Navigation</div>}
+        {!collapsed && (
+          <div className={styles.sidebarNavHeader}>
+            <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-tertiary)' }}>OPERATIONS</span>
+            <span style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.05em', color: 'var(--cyber-amber)' }}>
+              {activeTab === 'brew' ? 'REAL-TIME TELEMETRY' : 'SYSTEM ACTIVE'}
+            </span>
+          </div>
+        )}
         <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = activeTab === item.id
@@ -48,7 +64,7 @@ export function DesktopSidebar({ activeTab, onTabChange }: { activeTab: string, 
               <li key={item.id}>
                 <button 
                   onClick={() => onTabChange(item.id)}
-                  title={isCollapsed ? item.label : undefined}
+                  title={collapsed ? item.label : undefined}
                   style={{ 
                     background: 'none', 
                     border: 'none', 
@@ -59,22 +75,16 @@ export function DesktopSidebar({ activeTab, onTabChange }: { activeTab: string, 
                   }}
                 >
                   <motion.div
-                    whileHover={{ x: isCollapsed ? 0 : 4 }}
+                    whileHover={{ x: collapsed ? 0 : 4 }}
+                    className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: isCollapsed ? 'center' : 'flex-start',
-                      gap: isCollapsed ? '0' : 'var(--space-3)',
-                      padding: isCollapsed ? 'var(--space-3) 0' : 'var(--space-3) var(--space-4)',
-                      borderRadius: 'var(--radius-md)',
-                      color: isActive ? 'var(--cyber-amber)' : 'var(--text-secondary)',
-                      background: isActive ? 'rgba(255, 191, 0, 0.08)' : 'transparent',
-                      transition: 'all var(--transition-base)',
-                      border: isActive ? '1px solid rgba(255, 191, 0, 0.2)' : '1px solid transparent',
+                      justifyContent: collapsed ? 'center' : 'flex-start',
+                      gap: collapsed ? '0' : 'var(--space-3)',
+                      padding: collapsed ? 'var(--space-3) 0' : 'var(--space-3) var(--space-4)',
                     }}
                   >
                     <Icon size={18} className={isActive ? 'glow-amber' : ''} />
-                    {!isCollapsed && <span className={styles.navItemLabel}>{item.label}</span>}
+                    {!collapsed && <span className={styles.navItemLabel} style={{ fontWeight: isActive ? 600 : 400 }}>{item.label}</span>}
                   </motion.div>
                 </button>
               </li>
@@ -87,14 +97,14 @@ export function DesktopSidebar({ activeTab, onTabChange }: { activeTab: string, 
       <div className={styles.sidebarFooter}>
         <button 
           className="btn btn-ghost" 
-          style={{ justifyContent: isCollapsed ? 'center' : 'flex-start', width: '100%', padding: isCollapsed ? 'var(--space-3) 0' : undefined }}
-          title={isCollapsed ? 'Settings' : undefined}
+          style={{ justifyContent: collapsed ? 'center' : 'flex-start', width: '100%', padding: collapsed ? 'var(--space-3) 0' : undefined }}
+          title={collapsed ? 'Settings' : undefined}
         >
           <Settings size={18} />
-          {!isCollapsed && <span className={styles.footerLabel}>Settings</span>}
+          {!collapsed && <span className={styles.footerLabel}>Settings</span>}
         </button>
         
-        {!isCollapsed ? (
+        {!collapsed ? (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

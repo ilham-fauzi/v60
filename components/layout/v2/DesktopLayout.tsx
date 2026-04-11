@@ -1,5 +1,6 @@
 import React from 'react'
 import { DesktopSidebar } from './DesktopSidebar'
+import { TopMenuBar } from './TopMenuBar'
 import { useBrewStore } from '@/stores/BrewStore'
 import { Minimize2 } from 'lucide-react'
 import styles from './v2.module.css'
@@ -37,19 +38,23 @@ export function DesktopLayout({
         </button>
       )}
 
-      <main className={styles.mainContent}>
-        {/* Workspace Area */}
-        <div style={{ minWidth: 0 }}>
-          {children}
-        </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+        <TopMenuBar activeTab={activeTab} />
+        
+        <main className={styles.mainContent} style={{ overflowY: 'auto' }}>
+          {/* Workspace Area */}
+          <div style={{ minWidth: 0 }}>
+            {children}
+          </div>
 
-        {/* Intelligence Side Panel */}
-        {rightContent && (
-          <aside className={styles.intelligencePanel}>
-            {rightContent}
-          </aside>
-        )}
-      </main>
+          {/* Intelligence Side Panel */}
+          {rightContent && (
+            <aside className={styles.intelligencePanel}>
+              {rightContent}
+            </aside>
+          )}
+        </main>
+      </div>
     </div>
   )
 }

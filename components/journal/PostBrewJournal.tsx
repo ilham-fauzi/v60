@@ -76,62 +76,76 @@ export function PostBrewJournal() {
   }
 
   return (
-    <section className={styles.journal}>
-      <header className={styles.header}>
-        <h2 className={styles.title}>Dial-In Journal</h2>
-        <div style={{ fontSize: '10px', color: 'var(--cyber-teal)', fontWeight: 800 }}>SQLITE PERSISTED</div>
+    <section className={styles.journal} style={{ maxWidth: '100%' }}>
+      <header className={styles.header} style={{ marginBottom: 'var(--space-6)' }}>
+        <div>
+          <h2 style={{ fontSize: 'var(--text-3xl)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 'var(--space-1)' }}>
+            Post-Brew Analytics
+          </h2>
+          <p style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-sm)' }}>
+             Review extraction outcomes and sensory data
+          </p>
+        </div>
+        <div style={{ padding: '4px 8px', background: 'rgba(0, 242, 255, 0.1)', color: 'var(--cyber-teal)', fontSize: '10px', fontWeight: 800, borderRadius: 4, letterSpacing: '0.05em' }}>
+          LOCAL DB SYNCED
+        </div>
       </header>
 
       {logs.length === 0 ? (
-        <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>📝</div>
-          <p>No brews recorded yet.</p>
-          <span className={styles.emptySub}>Start a brewing session to see your history here.</span>
+        <div className="v2-glass" style={{ padding: 'var(--space-8)', textAlign: 'center', borderRadius: 'var(--radius-xl)' }}>
+          <div style={{ fontSize: '2rem', marginBottom: 'var(--space-2)', opacity: 0.5 }}>📝</div>
+          <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>No extractions recorded.</p>
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)' }}>Initiate a formula to generate telemetry data.</span>
         </div>
       ) : (
-        <div className={styles.logList}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           {logs.map((log) => (
-            <article key={log.id} className={styles.logCard}>
-              <div className={styles.logHeader}>
-                <div className={styles.logMeta}>
-                  <div className={styles.methodIcon}>
-                    {log.method === 'v60' ? '🫗' : log.method === 'aeropress' ? '⬆️' : '☕'}
+            <article key={log.id} className="v2-glass" style={{ padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--cyber-border)', position: 'relative' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+                <div>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-tertiary)', letterSpacing: '0.1em', marginBottom: '2px' }}>
+                    {log.date} — {log.method.toUpperCase()}
                   </div>
-                  <div>
-                    <h3 className={styles.recipeName}>{log.recipeName}</h3>
-                    <div className={styles.date}>{log.date}</div>
-                  </div>
+                  <h3 style={{ fontSize: 'var(--text-xl)', fontWeight: 800 }}>{log.recipeName}</h3>
                 </div>
-                <div className={styles.scoreBadge}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                   {log.score > 0 ? (
-                    <>
-                      {log.score.toFixed(1)} <span className={styles.scoreMax}>/ 10</span>
-                    </>
+                    <div style={{ padding: '4px 8px', background: 'rgba(0, 242, 255, 0.1)', color: 'var(--cyber-teal)', borderRadius: 4, fontWeight: 900, fontSize: 'var(--text-lg)' }}>
+                      {log.score.toFixed(1)} <span style={{ fontSize: '10px', opacity: 0.6 }}>/ 10</span>
+                    </div>
                   ) : (
-                    <span style={{ fontSize: '10px', opacity: 0.5 }}>NO RATING</span>
+                    <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-tertiary)', padding: '4px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: 4 }}>
+                      NO SENSORY DATA
+                    </div>
                   )}
                 </div>
               </div>
 
-              <div className={styles.statsGrid}>
-                <div className={styles.stat}>
-                  <span className={styles.sVal}>{log.stats.coffee}g</span>
-                  <span className={styles.sKey}>In</span>
+              <div className="responsive-grid-4" style={{ background: 'rgba(255,255,255,0.02)', padding: 'var(--space-3)', borderRadius: 'var(--radius-lg)' }}>
+                <div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em' }}>DOSE</div>
+                  <div style={{ fontWeight: 800, fontSize: 'var(--text-md)' }}>{log.stats.coffee}g</div>
                 </div>
-                <div className={styles.stat}>
-                  <span className={styles.sVal}>{log.stats.water}g</span>
-                  <span className={styles.sKey}>Out</span>
+                <div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em' }}>YIELD</div>
+                  <div style={{ fontWeight: 800, fontSize: 'var(--text-md)' }}>{log.stats.water}g</div>
                 </div>
-                <div className={styles.stat}>
-                  <span className={styles.sVal}>{log.stats.time}</span>
-                  <span className={styles.sKey}>Time</span>
+                <div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em' }}>TIME</div>
+                  <div style={{ fontWeight: 800, fontSize: 'var(--text-md)' }}>{log.stats.time}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em' }}>TDS</div>
+                  <div style={{ fontWeight: 800, fontSize: 'var(--text-md)', color: log.stats.tds ? 'var(--cyber-teal)' : 'var(--text-tertiary)' }}>
+                    {log.stats.tds ? `${log.stats.tds}%` : '--'}
+                  </div>
                 </div>
               </div>
 
               {log.notes && (
-                <div className={styles.notes}>
-                  <span className={styles.notesIcon}>💡</span>
-                  <p>{log.notes}</p>
+                <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--cyber-border)' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: 'var(--space-1)' }}>SENSOR NOTES</div>
+                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>{log.notes}</p>
                 </div>
               )}
             </article>

@@ -12,7 +12,7 @@ const BrewDashboardV2 = dynamic(() => import('@/components/brew/v2/BrewDashboard
 })
 import { RecipeLibraryV2 } from '@/components/recipe/v2/RecipeLibraryV2'
 import { PostBrewJournal } from '@/components/journal/PostBrewJournal'
-import { Search, Coffee, Zap } from 'lucide-react'
+import { Search, Coffee, Zap, Settings } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export default function Home() {
@@ -51,97 +51,155 @@ export default function Home() {
     r.method.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const FormulaDatabase = (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 'var(--space-4)' }}>
-      <div className="cyber-panel-header">Formula Database</div>
+  // Intelligence Right Side Panels
+  const BrewIntelligence = (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 'var(--space-6)' }}>
+      <div style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.1em', color: 'var(--cyber-teal)' }}>
+        INTELLIGENCE<br/>
+        <span style={{ color: 'var(--text-tertiary)' }}>AI SENSOR CORE</span>
+      </div>
       
-      {/* Search Header */}
-      <div className="v2-glass" style={{ padding: 'var(--space-3)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-        <Search size={14} color="var(--text-tertiary)" />
-        <input 
-          type="text" 
-          placeholder="Filter formulas..." 
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          style={{ 
-            background: 'none', 
-            border: 'none', 
-            color: '#fff', 
-            fontSize: 'var(--text-xs)', 
-            width: '100%',
-            outline: 'none'
-          }} 
-        />
+      <div className="v2-glass" style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', color: 'var(--cyber-teal)', fontSize: '10px', fontWeight: 700, marginBottom: 'var(--space-4)' }}>
+          <Zap size={14} /> PREDICTION
+        </div>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-primary)', fontStyle: 'italic', lineHeight: 1.5 }}>
+          "Flow rate is 0.4g/s above target. Recommend reducing pour intensity to maintain extraction balance."
+        </p>
       </div>
 
-      {/* Scrollable List */}
-      <div style={{ 
-        flex: 1, 
-        overflowY: 'auto', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: 'var(--space-3)',
-        paddingRight: 'var(--space-2)',
-        maxHeight: 'calc(100vh - 280px)' // Responsive height for sidebar
-      }} className="hide-scrollbar">
-        {filteredRecipes.map((r) => {
-          const isActive = activeRecipe?.id === r.id
-          return (
-            <motion.div
-              key={r.id}
-              whileHover={{ x: 4 }}
-              onClick={() => {
-                setActiveRecipe(r)
-                if (activeTab !== 'brew') setActiveTab('brew')
-              }}
-              className="v2-glass"
-              style={{
-                padding: 'var(--space-3)',
-                borderRadius: 'var(--radius-lg)',
-                cursor: 'pointer',
-                border: isActive ? '1px solid var(--cyber-amber)' : '1px solid var(--cyber-border)',
-                background: isActive ? 'rgba(255, 191, 0, 0.05)' : 'rgba(255,255,255,0.02)',
-                transition: 'all 0.2s'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: isActive ? 'var(--cyber-amber)' : 'var(--text-primary)' }}>
-                  {r.name}
-                </span>
-                <span style={{ fontSize: '9px', fontWeight: 900, color: 'var(--text-tertiary)' }}>
-                  {r.method.toUpperCase()}
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-1)', fontSize: '10px', color: 'var(--text-tertiary)' }}>
-                <span>{r.coffeeGrams}g</span>
-                <span>•</span>
-                <span>1:{r.ratio}</span>
-              </div>
-            </motion.div>
-          )
-        })}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: 'var(--space-3) 0', borderBottom: '1px solid var(--cyber-border)', fontSize: '10px', fontWeight: 700 }}>
+          <span style={{ color: 'var(--text-secondary)' }}>AVG TEMP</span>
+          <span style={{ color: 'var(--cyber-teal)' }}>92.8°C</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: 'var(--space-3) 0', borderBottom: '1px solid var(--cyber-border)', fontSize: '10px', fontWeight: 700 }}>
+          <span style={{ color: 'var(--text-secondary)' }}>VARIANCE</span>
+          <span style={{ color: '#ffb084' }}>+1.2%</span>
+        </div>
       </div>
 
-      {/* System Stats Block */}
-      <div className="v2-glass" style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-xl)', marginTop: 'auto' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--cyber-teal)', opacity: 0.6, display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <Zap size={10} /> [NODE] KINETIC_STABLE
+      <button className="btn btn-ghost" style={{ width: '100%', marginTop: 'auto', border: '1px solid var(--cyber-border)', color: 'var(--cyber-teal)', fontSize: '10px', letterSpacing: '0.1em' }}>
+        SEARCH DATABASE
+      </button>
+    </div>
+  )
+
+  const RecipesIntelligence = (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 'var(--space-6)' }}>
+      <div style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.1em', color: 'var(--text-secondary)' }}>
+        INTELLIGENCE<br/>
+        <span style={{ color: 'var(--cyber-teal)' }}>AI SENSOR CORE</span>
+      </div>
+
+      <div className="v2-glass" style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', background: 'rgba(0, 242, 255, 0.05)' }}>
+        <Zap size={14} color="var(--cyber-teal)" />
+        <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--cyber-teal)' }}>Formula Lookup</span>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: '0 var(--space-4)' }}>
+        <Coffee size={14} color="var(--text-tertiary)" />
+        <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-secondary)' }}>Telemetry</span>
+      </div>
+
+      <div className="v2-glass" style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)', marginTop: 'var(--space-4)' }}>
+        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 'var(--space-4)' }}>
+          EXTRACTION PREDICTION
+        </div>
+        
+        {/* Placeholder Chart */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '100px', marginBottom: 'var(--space-4)' }}>
+          <div style={{ width: '15%', height: '40%', background: 'rgba(0, 242, 255, 0.3)' }} />
+          <div style={{ width: '15%', height: '60%', background: 'rgba(0, 242, 255, 0.5)' }} />
+          <div style={{ width: '15%', height: '80%', background: 'rgba(0, 242, 255, 0.7)' }} />
+          <div style={{ width: '15%', height: '100%', background: 'var(--cyber-amber)', boxShadow: 'var(--cyber-glow-amber)' }} />
+          <div style={{ width: '15%', height: '50%', background: 'rgba(0, 242, 255, 0.4)' }} />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-tertiary)' }}>
+          <span>Current Yield</span>
+          <span style={{ color: 'var(--cyber-teal)' }}>248.5g</span>
+        </div>
+      </div>
+
+      <button className="btn btn-ghost" style={{ width: '100%', marginTop: 'auto', border: '1px solid var(--cyber-border)', color: 'var(--cyber-teal)', fontSize: '10px', letterSpacing: '0.1em' }}>
+        SEARCH DATABASE
+      </button>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '10px', color: 'var(--text-tertiary)' }}>
+        <Settings size={12} /> Diagnostics
+      </div>
+    </div>
+  )
+
+  const HistoryIntelligence = (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 'var(--space-6)' }}>
+      <div style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.1em', color: 'var(--cyber-teal)' }}>
+        INTELLIGENCE<br/>
+        <span style={{ color: 'var(--text-tertiary)' }}>AI SENSOR CORE</span>
+      </div>
+
+      <div className="v2-glass" style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', background: 'rgba(0, 242, 255, 0.05)' }}>
+        <Zap size={14} color="var(--cyber-teal)" />
+        <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--cyber-teal)' }}>FORMULA LOOKUP</span>
+      </div>
+
+      <div style={{ padding: '0 var(--space-2)' }}>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+          Based on 14 recent entries, your optimal extraction window for Washed Kenya beans is 3:05 - 3:20 at 94°C.
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', paddingTop: 'var(--space-4)', paddingLeft: 'var(--space-2)' }}>
+        <Coffee size={14} color="var(--text-tertiary)" />
+        <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-primary)' }}>TELEMETRY</span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: '0 var(--space-2)' }}>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: 'var(--space-2)' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Avg TDS</span>
+            <span style={{ fontWeight: 600 }}>1.42%</span>
           </div>
-          <div>[IO] SCALE_STREAM_CONNECTED</div>
+          <div style={{ height: 4, background: 'var(--bg-tertiary)', borderRadius: 2 }}>
+            <div style={{ width: '80%', height: '100%', background: 'var(--cyber-teal)', borderRadius: 2 }} />
+          </div>
+        </div>
+
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: 'var(--space-2)' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Extraction Stability</span>
+            <span style={{ fontWeight: 600, color: '#22c55e' }}>High</span>
+          </div>
+          <div style={{ height: 4, background: 'var(--bg-tertiary)', borderRadius: 2 }}>
+            <div style={{ width: '92%', height: '100%', background: '#22c55e', borderRadius: 2 }} />
+          </div>
+        </div>
+      </div>
+
+      <button className="btn btn-ghost" style={{ width: '100%', marginTop: 'auto', border: '1px solid var(--cyber-border)', color: 'var(--text-secondary)', fontSize: '10px', letterSpacing: '0.1em', fontWeight: 700 }}>
+        SEARCH DATABASE
+      </button>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--space-6)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '10px', color: 'var(--text-tertiary)' }}>
+          <Settings size={12} /> DIAGNOSTICS
         </div>
       </div>
     </div>
   )
 
+  const activeRightContent = activeTab === 'brew' ? BrewIntelligence : 
+                             activeTab === 'recipes' ? RecipesIntelligence : 
+                             HistoryIntelligence;
+
   return (
     <DesktopLayout 
       activeTab={activeTab} 
       onTabChange={setActiveTab}
-      rightContent={FormulaDatabase}
+      rightContent={activeRightContent}
       isFocusMode={isFocusMode}
     >
-      {/* Primary Workspace */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
         {activeTab === 'brew' && <BrewDashboardV2 recipe={activeRecipe} />}
         {activeTab === 'recipes' && (
@@ -149,7 +207,7 @@ export default function Home() {
         )}
         
         {activeTab === 'history' && (
-          <div className="v2-glass" style={{ padding: 'var(--space-8)', borderRadius: 'var(--radius-xl)' }}>
+          <div style={{ width: '100%' }}>
             <PostBrewJournal />
           </div>
         )}
