@@ -144,6 +144,41 @@ export function BrewDashboardV2({ recipe }: Props) {
     }
   }, [isBrewing, isPaused])
 
+  // Screen Wake Lock API to prevent device from sleeping while brewing
+  useEffect(() => {
+    let wakeLock: any = null
+
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator && isBrewing) {
+          wakeLock = await (navigator as any).wakeLock.request('screen')
+        }
+      } catch (err) {
+        console.warn(`Wake Lock error: ${err}`)
+      }
+    }
+
+    if (isBrewing) {
+      requestWakeLock()
+    } else if (wakeLock) {
+      wakeLock.release().then(() => { wakeLock = null }).catch(() => {})
+    }
+
+    // Re-request wake lock if tab becomes visible again
+    const handleVisibilityChange = () => {
+      if (wakeLock !== null && document.visibilityState === 'visible' && isBrewing) {
+        requestWakeLock()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      if (wakeLock) wakeLock.release().catch(() => {})
+    }
+  }, [isBrewing])
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
