@@ -140,6 +140,8 @@ export function BrewDashboardV2({ recipe }: Props) {
     setReverseDrawdownEnabled,
   } = useBrewStore()
 
+  const [mounted, setMounted] = React.useState(false)
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const tickRef = useRef(tick)
   tickRef.current = tick
@@ -154,6 +156,10 @@ export function BrewDashboardV2({ recipe }: Props) {
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [isBrewing, isPaused])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Screen Wake Lock API to prevent device from sleeping while brewing
   useEffect(() => {
@@ -214,6 +220,8 @@ export function BrewDashboardV2({ recipe }: Props) {
   const currentCumulativeTarget = currentStage?.cumulativeTotal ?? 0
   const totalProgress = targetWeight > 0 ? (currentWeight / targetWeight) * 100 : 0
   const isPouring = isBrewing && currentFlowRate > 0.1
+
+  if (!mounted) return <DashboardSkeleton />
 
   return (
     <div className={`${styles.container} ${isBrewing ? styles.hudMode : ''}`}>

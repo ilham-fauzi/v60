@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Coffee, Ghost, ArrowRight, Trash2, Copy, Edit3, Share2 } from 'lucide-react'
+import { Plus, Coffee, Ghost, ArrowRight, Trash2, Copy, Edit3, Share2, Check } from 'lucide-react'
 import { useRecipeStore } from '@/stores/RecipeStore'
 import { useBrewStore } from '@/stores/BrewStore'
 import { encodeRecipeForSharing, generateRecipeSlug } from '@/utils/recipe-sharing'
@@ -178,16 +178,15 @@ function RecipeV2Card({
   const [isHovered, setIsHovered] = React.useState(false)
   const [showCopyFeedback, setShowCopyFeedback] = React.useState(false)
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    const encoded = encodeRecipeForSharing(recipe)
-    const slug = generateRecipeSlug(recipe)
-    const url = `${window.location.origin}/b/${slug}?r=${encoded}`
-    
-    navigator.clipboard.writeText(url).then(() => {
-      setShowCopyFeedback(true)
-      setTimeout(() => setShowCopyFeedback(false), 2000)
-    })
+    const url = await useRecipeStore.getState().shareRecipe(recipe.id)
+    if (url) {
+      navigator.clipboard.writeText(url).then(() => {
+        setShowCopyFeedback(true)
+        setTimeout(() => setShowCopyFeedback(false), 2000)
+      })
+    }
   }
 
   return (
@@ -251,6 +250,13 @@ function RecipeV2Card({
 
       {/* Action Controls hidden unless hovered to keep UI clean, or place top right absolute */}
       <div style={{ position: 'absolute', top: 'var(--space-4)', right: 'var(--space-4)', display: 'flex', gap: 'var(--space-2)', opacity: isHovered || isActive ? 1 : 0, transition: 'opacity 0.2s' }}>
+        <button 
+          onClick={handleShare}
+          style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 4, padding: 4, color: showCopyFeedback ? 'var(--cyber-teal)' : 'var(--text-tertiary)', cursor: 'pointer' }}
+          title="Share Formula Link"
+        >
+          {showCopyFeedback ? <Check size={12} /> : <Share2 size={12} />}
+        </button>
         <button 
           onClick={(e) => { e.stopPropagation(); onEdit(); }}
           style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 4, padding: 4, color: 'var(--text-tertiary)', cursor: 'pointer' }}

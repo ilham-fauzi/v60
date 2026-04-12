@@ -263,13 +263,13 @@ export default function SharedRecipePage() {
             <motion.div key="not_found" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
               <AlertCircle size={48} style={{ color: '#ff4444', marginBottom: 'var(--space-4)' }} />
               <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 800, marginBottom: 'var(--space-2)' }}>
-                Link Tidak Ditemukan
+                Link Not Found
               </h2>
               <p style={{ color: 'var(--text-tertiary)', marginBottom: 'var(--space-8)' }}>
-                Formula ini tidak tersedia. Minta link baru dari pembuat resep.
+                This formula is unavailable. Please request a new link from the recipe creator.
               </p>
               <button onClick={() => router.push('/')} className="btn btn-primary" style={{ width: '100%' }}>
-                KEMBALI KE DASHBOARD
+                RETURN TO DASHBOARD
               </button>
             </motion.div>
           )}
@@ -279,13 +279,13 @@ export default function SharedRecipePage() {
             <motion.div key="expired" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
               <AlertCircle size={48} style={{ color: 'var(--cyber-amber)', marginBottom: 'var(--space-4)' }} />
               <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 800, marginBottom: 'var(--space-2)' }}>
-                Link Sudah Tidak Aktif
+                Link Expired
               </h2>
               <p style={{ color: 'var(--text-tertiary)', marginBottom: 'var(--space-8)' }}>
-                Link ini sudah expired (3 hari). Minta link baru dari pembuat resep.
+                This link has expired (3 days limit). Please request a new link from the recipe creator.
               </p>
               <button onClick={() => router.push('/')} className="btn btn-primary" style={{ width: '100%' }}>
-                KEMBALI KE DASHBOARD
+                RETURN TO DASHBOARD
               </button>
             </motion.div>
           )}
