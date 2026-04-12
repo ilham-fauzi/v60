@@ -1,6 +1,9 @@
+'use client'
+
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Settings, User } from 'lucide-react'
+import { useBrewStore } from '@/stores/BrewStore'
 import styles from './v2.module.css'
 
 interface TopMenuBarProps {
@@ -8,6 +11,13 @@ interface TopMenuBarProps {
 }
 
 export function TopMenuBar({ activeTab }: TopMenuBarProps) {
+  const { activeRecipe } = useBrewStore()
+  const [isMounted, setIsMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   // Determine dynamic string based on the active tab
   let subtitle = 'SYSTEM ACTIVE'
   let rightMenu = null
@@ -75,18 +85,20 @@ export function TopMenuBar({ activeTab }: TopMenuBarProps) {
         
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
           {/* Temperature Indicator */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 'var(--space-2)',
-            background: 'var(--bg-card)',
-            padding: '4px 12px',
-            borderRadius: 'var(--radius-full)',
-            border: '1px solid var(--cyber-border)'
-          }}>
-            <span style={{ color: 'var(--cyber-amber)', fontSize: '10px' }}>🌡</span>
-            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600 }}>93°C</span>
-          </div>
+          {isMounted && activeRecipe && activeRecipe.temperature > 0 && (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 'var(--space-2)',
+              background: 'var(--bg-card)',
+              padding: '4px 12px',
+              borderRadius: 'var(--radius-full)',
+              border: '1px solid var(--cyber-border)'
+            }}>
+              <span style={{ color: 'var(--cyber-amber)', fontSize: '10px' }}>🌡</span>
+              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600 }}>{activeRecipe.temperature}°C</span>
+            </div>
+          )}
           
           <button style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
             <Settings size={18} />

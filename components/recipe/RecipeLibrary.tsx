@@ -4,7 +4,7 @@ import styles from './RecipeLibrary.module.css'
 import { useRecipeStore } from '@/stores/RecipeStore'
 import { useBrewStore } from '@/stores/BrewStore'
 import type { Recipe, BrewMethod } from '@/types'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { RecipeEditor } from './RecipeEditor'
 
 const METHOD_LABELS: Record<BrewMethod, string> = {
@@ -32,9 +32,21 @@ interface RecipeCardProps {
   onDelete: (id: string) => void
   onClone: (id: string) => void
   onEdit: (r: Recipe) => void
+  onShare: (id: string) => Promise<void>
 }
 
-function RecipeCard({ recipe, isActive, onSelect, onDelete, onClone, onEdit }: RecipeCardProps) {
+function RecipeCard({ recipe, isActive, onSelect, onDelete, onClone, onEdit, onShare }: RecipeCardProps) {
+  const [isSharing, setIsSharing] = useState(false)
+  const [justShared, setJustShared] = useState(false)
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsSharing(true)
+    await onShare(recipe.id)
+    setIsSharing(false)
+    setJustShared(true)
+    setTimeout(() => setJustShared(false), 2000)
+  }
   return (
     <div
       className={`${styles.card} ${isActive ? styles.activeCard : ''}`}
@@ -107,6 +119,15 @@ function RecipeCard({ recipe, isActive, onSelect, onDelete, onClone, onEdit }: R
                 Edit
               </button>
               <button
+                className="btn btn-sm btn-ghost"
+                onClick={handleShare}
+                disabled={isSharing}
+                style={{ color: justShared ? 'var(--cyber-teal, #00e5cc)' : undefined }}
+                title="Share recipe link"
+              >
+                {isSharing ? '...' : justShared ? 'Copied!' : 'Share'}
+              </button>
+              <button
                 className={`btn btn-sm btn-ghost ${styles.deleteBtn}`}
                 onClick={(e) => { e.stopPropagation(); onDelete(recipe.id) }}
                 aria-label="Delete recipe"
@@ -126,12 +147,16 @@ interface RecipeLibraryProps {
 }
 
 export function RecipeLibrary({ onSelectSuccess }: RecipeLibraryProps) {
-  const { recipes, deleteRecipe, cloneRecipe, addRecipe, updateRecipe } = useRecipeStore()
+  const { recipes, deleteRecipe, cloneRecipe, addRecipe, updateRecipe, shareRecipe } = useRecipeStore()
   const { activeRecipe, setActiveRecipe } = useBrewStore()
   const [editorState, setEditorState] = useState<{ open: boolean, recipe: Recipe | null }>({
     open: false,
     recipe: null
   })
+
+  const handleShare = useCallback(async (id: string) => {
+    await shareRecipe(id)
+  }, [shareRecipe])
 
   const handleSelect = (recipe: Recipe) => {
     setActiveRecipe(recipe)
@@ -186,6 +211,7 @@ export function RecipeLibrary({ onSelectSuccess }: RecipeLibraryProps) {
                 onDelete={deleteRecipe}
                 onClone={cloneRecipe}
                 onEdit={(recipe) => setEditorState({ open: true, recipe })}
+                onShare={handleShare}
               />
             ))}
           </div>
@@ -196,16 +222,17 @@ export function RecipeLibrary({ onSelectSuccess }: RecipeLibraryProps) {
         <div className={styles.groupLabel}>Standard Presets</div>
         <div className={styles.grid}>
           {presets.map((r) => (
-            <RecipeCard
-              key={r.id}
-              recipe={r}
-              isActive={activeRecipe?.id === r.id}
-              onSelect={handleSelect}
-              onDelete={deleteRecipe}
-              onClone={cloneRecipe}
-              onEdit={(recipe) => setEditorState({ open: true, recipe })}
-            />
-          ))}
+              <RecipeCard
+                key={r.id}
+                recipe={r}
+                isActive={activeRecipe?.id === r.id}
+                onSelect={handleSelect}
+                onDelete={deleteRecipe}
+                onClone={cloneRecipe}
+                onEdit={(recipe) => setEditorState({ open: true, recipe })}
+                onShare={handleShare}
+              />
+            ))}
         </div>
       </div>
 

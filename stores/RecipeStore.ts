@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage, devtools } from 'zustand/middleware'
 import type { Recipe, RecipeState } from '@/types'
+import { shareRecipe as _shareRecipe, revokeShare as _revokeShare } from '@/lib/share'
 
 interface RecipeActions {
   addRecipe: (recipe: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'stages'> & { stages: Omit<Recipe['stages'][number], 'id'>[] }) => Promise<Recipe>
@@ -11,6 +12,10 @@ interface RecipeActions {
   getRecipeById: (id: string) => Recipe | undefined
   initRecipes: () => Promise<void>
   addLocalRecipe: (recipe: Recipe) => void
+  /** Share a recipe — copies to SQLite (encrypted), returns share URL or null */
+  shareRecipe: (id: string) => Promise<string | null>
+  /** Revoke a shared recipe — removes from SQLite, clears share state */
+  revokeShare: (id: string) => Promise<void>
 }
 
 export const useRecipeStore = create<RecipeState & RecipeActions>()(
@@ -28,12 +33,25 @@ export const useRecipeStore = create<RecipeState & RecipeActions>()(
             
             set((state: RecipeState) => {
               const localRecipes = state.recipes.filter(r => !r.id.startsWith('cloud-'))
-              const markedServer = serverRecipes.map((r: Recipe) => ({ ...r }))
+              const markedServer = serverRecipes.map((r: Recipe) => ({ 
+                ...r,
+                // Sanitize Drawdown targetWeight
+                stages: r.stages.map((s: any) => ({
+                  ...s,
+                  targetWeight: s.name.toLowerCase().includes('drawdown') ? 0 : s.targetWeight
+                }))
+              }))
 
               const combined = [...markedServer]
               localRecipes.forEach((lr: Recipe) => {
                 if (!combined.find(sr => sr.id === lr.id)) {
-                  combined.push(lr)
+                  combined.push({
+                    ...lr,
+                    stages: lr.stages.map((s: any) => ({
+                      ...s,
+                      targetWeight: s.name.toLowerCase().includes('drawdown') ? 0 : s.targetWeight
+                    }))
+                  })
                 }
               })
 
@@ -83,12 +101,24 @@ export const useRecipeStore = create<RecipeState & RecipeActions>()(
         },
 
         deleteRecipe: async (id: string) => {
+          // Revoke any active share before deleting
+          try { await _revokeShare(id) } catch { /* safe to ignore */ }
           if (!id.startsWith('temp-') && !id.startsWith('loc-')) {
             await fetch(`/api/recipes/${id}`, { method: 'DELETE' })
           }
           set((s: RecipeState) => ({
             recipes: s.recipes.filter((r) => r.id !== id),
           }))
+        },
+
+        shareRecipe: async (id: string) => {
+          const recipe = get().getRecipeById(id)
+          if (!recipe) return null
+          return _shareRecipe(recipe)
+        },
+
+        revokeShare: async (id: string) => {
+          await _revokeShare(id)
         },
 
         cloneRecipe: async (id: string) => {
@@ -131,6 +161,22 @@ export const useRecipeStore = create<RecipeState & RecipeActions>()(
       { 
         name: 'brewmaster-recipes',
         storage: createJSONStorage(() => localStorage),
+        version: 1,
+        migrate: (persistedState: any, version: number) => {
+          if (version === 0) {
+            // Migrate all old recipes to ensure Drawdown stage has targetWeight = 0
+            if (persistedState.recipes) {
+              persistedState.recipes = persistedState.recipes.map((r: any) => ({
+                ...r,
+                stages: r.stages?.map((s: any) => ({
+                  ...s,
+                  targetWeight: s.name?.toLowerCase().includes('drawdown') ? 0 : s.targetWeight
+                })) ?? []
+              }))
+            }
+          }
+          return persistedState
+        }
       }
     )
   )

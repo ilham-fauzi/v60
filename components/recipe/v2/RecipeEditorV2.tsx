@@ -16,7 +16,7 @@ interface Props {
 const DEFAULT_STAGES: Omit<BrewStage, 'id'>[] = [
   { name: 'Blooming', targetWeight: 50, targetSeconds: 50, temperature: 93, notes: 'Degas and saturate grounds' },
   { name: 'Main Pour', targetWeight: 240, targetSeconds: 60, temperature: 93 },
-  { name: 'Drawdown', targetWeight: 240, targetSeconds: 60, temperature: 0 },
+  { name: 'Drawdown', targetWeight: 0, targetSeconds: 60, temperature: 0 },
 ]
 
 export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
@@ -94,7 +94,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
     // 3. Drawdown
     result.push({
       name: 'Drawdown',
-      targetWeight: waterVal,
+      targetWeight: 0,
       targetSeconds: 60,
       temperature: 0
     })
@@ -144,8 +144,9 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
 
   // Calculation Handlers
   const rebalanceStagesProportionally = (newTotal: number, currentStages: BrewStage[]) => {
-    // Find the last non-drawdown total or the final drawdown total
-    const currentTotal = currentStages[currentStages.length - 1].targetWeight
+    // Find the last non-drawdown total
+    const nonDrawdownStages = currentStages.filter(s => s.name !== 'Drawdown')
+    const currentTotal = nonDrawdownStages.length > 0 ? nonDrawdownStages[nonDrawdownStages.length - 1].targetWeight : 0
     if (currentTotal === 0 || isNaN(currentTotal)) return currentStages
 
     const factor = newTotal / currentTotal
@@ -153,7 +154,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
         const isDrawdown = s.name === 'Drawdown' || idx === currentStages.length - 1
         return { 
           ...s, 
-          targetWeight: isDrawdown ? newTotal : parseFloat((s.targetWeight * factor).toFixed(1)) 
+          targetWeight: isDrawdown ? 0 : parseFloat((s.targetWeight * factor).toFixed(1)) 
         }
     })
   }
@@ -199,15 +200,8 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
     
     const isDrawdown = stages[idx].name === 'Drawdown' || idx === stages.length - 1
     
-    // Drawdown is always 0 in UI, but internally it's waterGrams.
-    // However, if the user "edits" a 0 drawdown, they might be trying to adjust target.
+    // Drawdown represents waiting time, no water is added
     if (isDrawdown) {
-       // Since it's read-only in UI now, this usually won't trigger, but keep for safety
-       if (newTotal > waterGrams) {
-            setErrorWarning(`Warning: Final weight exceeds target yield (${waterGrams.toFixed(1)}g).`)
-       } else {
-            setErrorWarning(null)
-       }
        return
     }
     
@@ -302,7 +296,8 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
     })
   }
 
-  const totalStageWeight = stages[stages.length - 1]?.targetWeight || 0
+  const lastPourStage = [...stages].reverse().find(s => s.name !== 'Drawdown')
+  const totalStageWeight = lastPourStage?.targetWeight || 0
   const totalStageTime = stages.reduce((acc, s) => acc + s.targetSeconds, 0)
   const weightMismatch = Math.abs(totalStageWeight - waterGrams) > 0.1
   const isHighComplexity = stages.length >= 6

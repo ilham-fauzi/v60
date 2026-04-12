@@ -117,7 +117,7 @@ export const useBrewStore = create<BrewState & BrewActions>()(
         resumeBrew: () => set({ isPaused: false }),
 
         stopBrew: async () => {
-          const { currentSession, currentWeight, history } = get()
+          const { currentSession, currentWeight, history, activeRecipe } = get()
           if (!currentSession) {
             set({ isBrewing: false, isPaused: false, currentFlowRate: 0 })
             return
@@ -138,13 +138,36 @@ export const useBrewStore = create<BrewState & BrewActions>()(
           })
 
           try {
-            await fetch('/api/sessions', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(completedSession),
+            // Dynamically import JournalStore to avoid circular dependencies
+            const { useJournalStore } = await import('@/stores/JournalStore')
+            
+            const start = new Date(completedSession.startedAt)
+            const end = new Date(completedSession.completedAt)
+            const durationSec = Math.max(0, Math.floor((end.getTime() - start.getTime()) / 1000))
+            const minutes = Math.floor(durationSec / 60)
+            const seconds = durationSec % 60
+            
+            const recipeName = activeRecipe?.name || 'Unknown Recipe'
+            const recipeId = activeRecipe?.id || 'manual'
+            const method = activeRecipe?.method || 'v60'
+            const coffeeGrams = activeRecipe?.coffeeGrams || 0
+            
+            useJournalStore.getState().addLog({
+              id: completedSession.id,
+              date: start.toLocaleString(),
+              recipeId,
+              recipeName,
+              method,
+              score: 0,
+              notes: '',
+              stats: {
+                coffee: coffeeGrams,
+                water: currentWeight,
+                time: `${minutes}:${seconds.toString().padStart(2, '0')}`,
+              }
             })
           } catch (error) {
-            console.error('Failed to save session to SQLite:', error)
+            console.error('Failed to save session to local JournalStore:', error)
           }
         },
 
@@ -186,7 +209,18 @@ export const useBrewStore = create<BrewState & BrewActions>()(
           }
         },
 
-        setActiveRecipe: (recipe) => set({ activeRecipe: recipe, targetWeight: recipe?.waterGrams ?? 0 }),
+        setActiveRecipe: (recipe) => {
+          let sanitizedRecipe = recipe
+          if (sanitizedRecipe) {
+            sanitizedRecipe = {
+              ...sanitizedRecipe,
+              stages: sanitizedRecipe.stages.map(s => 
+                s.name.toLowerCase().includes('drawdown') ? { ...s, targetWeight: 0 } : s
+              )
+            }
+          }
+          set({ activeRecipe: sanitizedRecipe, targetWeight: sanitizedRecipe?.waterGrams ?? 0 })
+        },
 
         toggleFocusMode: () => set((s) => ({ isFocusMode: !s.isFocusMode })),
         
@@ -213,7 +247,22 @@ export const useBrewStore = create<BrewState & BrewActions>()(
       {
         name: 'brewmaster-session',
         storage: createJSONStorage(() => localStorage),
-        // We only want to persist certain parts, but for simplicity let's do all
+        version: 1,
+        migrate: (persistedState: any, version: number) => {
+          let state = persistedState;
+          if (version === 0) {
+            // Clean up activeRecipe if it exists
+            if (state.activeRecipe) {
+              state.activeRecipe = {
+                ...state.activeRecipe,
+                stages: state.activeRecipe.stages.map((s: any) =>
+                  s.name.toLowerCase().includes('drawdown') ? { ...s, targetWeight: 0 } : s
+                )
+              }
+            }
+          }
+          return state;
+        }
       }
     )
   )

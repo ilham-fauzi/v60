@@ -36,11 +36,13 @@ export function DashboardSkeleton() {
 function LiquidPhaseOverlay({ 
   elapsedTime, 
   targetSeconds, 
+  targetWeight,
   stageName,
   reverseDrawdownEnabled
 }: { 
   elapsedTime: number, 
   targetSeconds: number, 
+  targetWeight: number,
   stageName: string,
   reverseDrawdownEnabled?: boolean
 }) {
@@ -109,6 +111,9 @@ function LiquidPhaseOverlay({
           {remaining}
         </motion.span>
         <span className={styles.liquidTimerLabel}>{stageName}</span>
+        <span style={{ fontSize: '26px', fontWeight: 900, color: 'var(--cyber-amber)', marginTop: '8px', letterSpacing: '0.05em', lineHeight: 1 }}>
+          {targetWeight}g
+        </span>
       </div>
     </div>
   )
@@ -202,7 +207,8 @@ export function BrewDashboardV2({ recipe }: Props) {
 
   const stages = recipe?.stages ?? []
   const stagesWithCumulative = stages.map(stage => {
-    return { ...stage, cumulativeTotal: stage.targetWeight }
+    const isDrawdown = stage.name.toLowerCase().includes('drawdown')
+    return { ...stage, cumulativeTotal: stage.targetWeight, targetWeight: isDrawdown ? 0 : stage.targetWeight }
   })
   const currentStage = stagesWithCumulative[currentStageIndex]
   const currentCumulativeTarget = currentStage?.cumulativeTotal ?? 0
@@ -451,6 +457,7 @@ export function BrewDashboardV2({ recipe }: Props) {
         <LiquidPhaseOverlay 
           elapsedTime={elapsedTime}
           targetSeconds={currentStage.targetSeconds}
+          targetWeight={currentStage.targetWeight}
           stageName={currentStage.name}
           reverseDrawdownEnabled={reverseDrawdownEnabled}
         />

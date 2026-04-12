@@ -46,3 +46,31 @@ model BrewSession {
   historyJson     String?   // JSON string of WeightDataPoint[]
   sensoryFeedback String?   // JSON string of SensoryFeedback
 }
+
+/// Shared recipe entries — token_id is SHA256(nanoId), data is AES-GCM encrypted
+model SharedRecipe {
+  tokenId     String   @id @map("token_id")       // SHA256(nanoId) — not the raw nanoId
+  data        String                               // AES-GCM encrypted JSON blob
+  shareChain  String   @default("[]") @map("share_chain")  // JSON array of anon UUIDs
+  createdAt   Int      @map("created_at")          // Unix timestamp (seconds)
+  expiresAt   Int      @map("expires_at")          // createdAt + 259200 (3 days)
+
+  @@map("shared_recipes")
+  @@index([expiresAt])
+}
+
+/// Metrics events — scaffold only, not yet wired to app flow
+model Metric {
+  id        Int     @id @default(autoincrement())
+  event     String                               // 'user_init' | 'recipe_created' | 'recipe_shared' | 'brew_started'
+  anonId    String? @map("anon_id")
+  tokenId   String? @map("token_id")            // SHA256(nanoId) if relevant
+  localId   String? @map("local_id")            // recipe UUID in localStorage
+  source    String? // 'local' | 'shared'
+  createdAt Int     @map("created_at")
+
+  @@map("metrics")
+  @@index([event])
+  @@index([anonId])
+  @@index([localId])
+}
