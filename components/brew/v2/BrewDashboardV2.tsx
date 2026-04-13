@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Play, Pause, Square, SkipForward, RotateCcw, Thermometer, Timer, Weight, Cpu } from 'lucide-react'
+import { Play, Pause, Square, SkipForward, RotateCcw, Thermometer, Timer, Weight, Cpu, Utensils, RefreshCw, Clock, Lock, Unlock, ArrowDown, Info } from 'lucide-react'
 import { useBrewStore } from '@/stores/BrewStore'
 import type { Recipe } from '@/types'
 
@@ -33,17 +33,33 @@ export function DashboardSkeleton() {
   )
 }
 
+const getActionIcon = (action?: string) => {
+  switch (action) {
+    case 'stir': return <Utensils size={14} />
+    case 'swirl': return <RefreshCw size={14} />
+    case 'steep': return <Clock size={14} />
+    case 'open-valve': return <Unlock size={14} />
+    case 'close-valve': return <Lock size={14} />
+    case 'press': return <ArrowDown size={14} />
+    default: return null
+  }
+}
+
 function LiquidPhaseOverlay({ 
   elapsedTime, 
   targetSeconds, 
   targetWeight,
   stageName,
+  action,
+  notes,
   reverseDrawdownEnabled
 }: { 
   elapsedTime: number, 
   targetSeconds: number, 
   targetWeight: number,
   stageName: string,
+  action?: string,
+  notes?: string,
   reverseDrawdownEnabled?: boolean
 }) {
   const isDrawdown = stageName.toLowerCase().includes('drawdown')
@@ -111,6 +127,20 @@ function LiquidPhaseOverlay({
           {remaining}
         </motion.span>
         <span className={styles.liquidTimerLabel}>{stageName}</span>
+        {action && action !== 'none' && (
+           <motion.div 
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--cyber-amber)', marginTop: 8 }}
+           >
+              {getActionIcon(action)} <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }}>{action.replace('-', ' ')}</span>
+           </motion.div>
+        )}
+        {notes && (
+          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontStyle: 'italic', marginTop: 4, maxWidth: '200px', textAlign: 'center' }}>
+            "{notes}"
+          </div>
+        )}
         <span style={{ fontSize: '26px', fontWeight: 900, color: 'var(--cyber-amber)', marginTop: '8px', letterSpacing: '0.05em', lineHeight: 1 }}>
           {targetWeight}g
         </span>
@@ -424,17 +454,29 @@ export function BrewDashboardV2({ recipe }: Props) {
       </div>
 
       {/* Control Strip */}
-      <div className={styles.controlStrip} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-4)', marginTop: '0' }}>
+      <div className={styles.controlStrip} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-4)', marginTop: 'var(--space-4)' }}>
         {!isBrewing ? (
-          <button 
-            className="btn btn-primary" 
-            style={{ height: 64, padding: '0 40px', background: 'var(--cyber-amber)', color: '#000', fontSize: 'var(--text-lg)', fontWeight: 800, borderRadius: 'var(--radius-xl)' }}
-            onClick={toggleBrew}
-          >
-            <Play fill="#000" size={24} /> INITIATE BREW CYCLE
-          </button>
-        ) : (
           <>
+            {recipe?.iceGrams && recipe.iceGrams > 0 ? (
+              <div style={{ background: 'rgba(255, 191, 0, 0.1)', border: '1px solid var(--cyber-amber)', padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)', maxWidth: '400px', textAlign: 'center', marginBottom: 'var(--space-2)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', color: 'var(--cyber-amber)', fontWeight: 800, marginBottom: 'var(--space-2)' }}>
+                  <Info size={16} /> PRE-BREW CHECKLIST
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                  This is an Iced recipe. Add <strong style={{ color: '#fff' }}>~{recipe.iceGrams}g of ice</strong> to your server and <strong>tare your scale to 0g</strong> before initiating the brew cycle.
+                </div>
+              </div>
+            ) : null}
+            <button 
+              className="btn btn-primary" 
+              style={{ height: 64, padding: '0 40px', background: 'var(--cyber-amber)', color: '#000', fontSize: 'var(--text-lg)', fontWeight: 800, borderRadius: 'var(--radius-xl)' }}
+              onClick={toggleBrew}
+            >
+              <Play fill="#000" size={24} /> INITIATE BREW CYCLE
+            </button>
+          </>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-4)' }}>
             <button style={{ 
               width: 56, height: 56, borderRadius: 'var(--radius-lg)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, color: 'var(--text-secondary)', cursor: 'pointer'
@@ -456,7 +498,7 @@ export function BrewDashboardV2({ recipe }: Props) {
               <SkipForward fill="currentColor" size={16} />
               <span style={{ fontSize: '8px', fontWeight: 600, letterSpacing: '0.1em' }}>SKIP</span>
             </button>
-          </>
+          </div>
         )}
       </div>
 
@@ -467,6 +509,8 @@ export function BrewDashboardV2({ recipe }: Props) {
           targetSeconds={currentStage.targetSeconds}
           targetWeight={currentStage.targetWeight}
           stageName={currentStage.name}
+          action={currentStage.action}
+          notes={currentStage.notes}
           reverseDrawdownEnabled={reverseDrawdownEnabled}
         />
       )}

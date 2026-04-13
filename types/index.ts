@@ -15,6 +15,7 @@ export interface BrewStage {
   targetWeight: number       // grams of water to pour in this stage
   targetSeconds: number      // duration of this stage in seconds
   temperature: number        // water temperature °C (0 = no heat requirement)
+  action?: 'none' | 'stir' | 'swirl' | 'steep' | 'open-valve' | 'close-valve' | 'press'
   notes?: string
 }
 
@@ -24,6 +25,7 @@ export interface Recipe {
   method: BrewMethod
   coffeeGrams: number
   waterGrams: number
+  iceGrams?: number          // Used for iced coffee recipes
   ratio: number              // e.g. 15 means 1:15
   grindSize: GrindSize
   temperature: number        // °C
