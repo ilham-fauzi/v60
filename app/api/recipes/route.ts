@@ -26,12 +26,14 @@ export async function POST(request: Request) {
     const recipe = await prisma.recipe.create({
       data: {
         ...recipeData,
+        iceGrams: recipeData.iceGrams || 0,
         stages: {
           create: stages.map((stage: any) => ({
             name: stage.name,
             targetWeight: stage.targetWeight,
             targetSeconds: stage.targetSeconds,
             temperature: stage.temperature,
+            action: stage.action || 'none',
             notes: stage.notes,
           })),
         },

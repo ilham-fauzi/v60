@@ -16,7 +16,7 @@ interface Props {
 const DEFAULT_STAGES: Omit<BrewStage, 'id'>[] = [
   { name: 'Blooming', targetWeight: 50, targetSeconds: 50, temperature: 93, notes: 'Degas and saturate grounds' },
   { name: 'Main Pour', targetWeight: 240, targetSeconds: 60, temperature: 93 },
-  { name: 'Drawdown', targetWeight: 0, targetSeconds: 60, temperature: 0 },
+  { name: 'Drawdown', targetWeight: 0, targetSeconds: 30, temperature: 0 },
 ]
 
 export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
@@ -24,6 +24,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
   const [method, setMethod] = useState<BrewMethod>(initialRecipe?.method || 'v60')
   const [coffeeGrams, setCoffeeGrams] = useState(initialRecipe?.coffeeGrams || 15)
   const [waterGrams, setWaterGrams] = useState(initialRecipe?.waterGrams || 240)
+  const [iceGrams, setIceGrams] = useState(initialRecipe?.iceGrams || 0)
   const [ratio, setRatio] = useState(initialRecipe?.ratio || 16)
   const [temperature, setTemperature] = useState(initialRecipe?.temperature || 93)
   const [grindSize, setGrindSize] = useState<GrindSize>(initialRecipe?.grindSize || 'medium_fine')
@@ -92,10 +93,13 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
     }
 
     // 3. Drawdown
+    const lastPour = result[result.length - 1]
+    const drawdownSeconds = lastPour ? Math.round(lastPour.targetSeconds / 2) : 60
+
     result.push({
       name: 'Drawdown',
       targetWeight: 0,
-      targetSeconds: 60,
+      targetSeconds: drawdownSeconds,
       temperature: 0
     })
 
@@ -166,7 +170,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
     }
     const roundedVal = roundToOne(val)
     setCoffeeGrams(roundedVal)
-    const newWater = roundToOne(roundedVal * ratio)
+    const newWater = Math.max(0, roundToOne(roundedVal * ratio) - iceGrams)
     setWaterGrams(newWater)
     setStages(prev => applySmartSuggest(newWater, roundedVal, prev))
   }
@@ -178,7 +182,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
     }
     const roundedVal = roundToOne(val)
     setRatio(roundedVal)
-    const newWater = roundToOne(coffeeGrams * roundedVal)
+    const newWater = Math.max(0, roundToOne(coffeeGrams * roundedVal) - iceGrams)
     setWaterGrams(newWater)
     setStages(prev => applySmartSuggest(newWater, coffeeGrams, prev))
   }
@@ -190,8 +194,18 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
     }
     const roundedVal = roundToOne(val)
     setWaterGrams(roundedVal)
-    setRatio(roundToOne(roundedVal / coffeeGrams))
+    setRatio(roundToOne((roundedVal + iceGrams) / coffeeGrams))
     setStages(prev => applySmartSuggest(roundedVal, coffeeGrams, prev))
+  }
+
+  const handleIceChange = (val: number) => {
+    if (isNaN(val) || val < 0) {
+      setIceGrams(0)
+      return
+    }
+    const roundedVal = roundToOne(val)
+    setIceGrams(roundedVal)
+    setRatio(roundToOne((waterGrams + roundedVal) / coffeeGrams))
   }
 
   const handleStageWeightUpdate = (id: string, newTotal: number) => {
@@ -310,6 +324,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
       method,
       coffeeGrams,
       waterGrams,
+      iceGrams,
       ratio,
       temperature,
       grindSize,
@@ -412,7 +427,8 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
             {/* Parameters Section */}
             <div className={styles.section} style={{ marginTop: 'var(--space-8)' }}>
               <div className={styles.sectionTitle}>Parameters</div>
-              <div className={styles.grid}>
+              <div className={styles.paramsGrid}>
+                {/* Line 1: Main Weight Stats */}
                 <div className={styles.field}>
                   <label className={styles.label}>Coffee Dose (g)</label>
                   <input 
@@ -424,7 +440,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                   />
                 </div>
                 <div className={styles.field}>
-                  <label className={styles.label}>Target Yield (g)</label>
+                  <label className={styles.label}>Water / Yield (g)</label>
                   <input 
                     type="number"
                     step="0.1"
@@ -433,6 +449,18 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                     onChange={e => handleWaterChange(parseFloat(e.target.value) || 0)}
                   />
                 </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Ice Amount (g)</label>
+                  <input 
+                    type="number"
+                    step="0.1"
+                    className={styles.input}
+                    value={iceGrams || ''}
+                    onChange={e => handleIceChange(parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+
+                {/* Line 2: Derivative Stats */}
                 <div className={styles.field}>
                   <label className={styles.label}>Ratio (1:X)</label>
                   <input 
@@ -574,8 +602,9 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                           </span>
                         </div>
                       </div>
+
                       <button 
-                        type="button" 
+                        type="button"  
                         className={styles.removeStage} 
                         onClick={() => !isMandatory && removeStage(stage.id)}
                         style={{ opacity: isMandatory ? 0 : 1, cursor: isMandatory ? 'default' : 'pointer', marginBottom: 8 }}
@@ -583,6 +612,37 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                       >
                         <Trash2 size={14} />
                       </button>
+
+                      <div style={{ gridColumn: '2 / 5', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 2fr)', gap: 'var(--space-3)' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div className={styles.fieldLabel}>Action</div>
+                            <select 
+                                className={styles.select}
+                                style={{ padding: '6px 10px', fontSize: '12px', opacity: (isMandatory && idx === stages.length - 1) ? 0.6 : 1 }}
+                                value={stage.action || 'none'}
+                                disabled={isMandatory && idx === stages.length - 1}
+                                onChange={e => updateStage(stage.id, { action: e.target.value as any })}
+                            >
+                                <option value="none">None</option>
+                                <option value="stir">Stir (Aduk)</option>
+                                <option value="swirl">Swirl (Putar)</option>
+                                <option value="steep">Steep (Hold)</option>
+                                <option value="open-valve">Open Valve</option>
+                                <option value="close-valve">Close Valve</option>
+                                <option value="press">Press / Plunge</option>
+                            </select>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div className={styles.fieldLabel}>Notes</div>
+                            <input 
+                                className={styles.input}
+                                placeholder="E.g. stir 3x..."
+                                style={{ padding: '6px 10px', fontSize: '12px' }}
+                                value={stage.notes || ''}
+                                onChange={e => updateStage(stage.id, { notes: e.target.value })}
+                            />
+                          </div>
+                      </div>
                     </motion.div>
                   );
                 })}

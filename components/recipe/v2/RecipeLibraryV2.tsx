@@ -59,6 +59,7 @@ export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => v
       method: 'v60',
       coffeeGrams: 15,
       waterGrams: 240,
+      iceGrams: 0,
       ratio: 16,
       grindSize: 'medium_fine',
       temperature: 93,
@@ -208,8 +209,11 @@ function RecipeV2Card({
     >
       <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-6)' }}>
         {recipe.aiGenerated && (
-          <div style={{ fontSize: '8px', fontWeight: 800, padding: '4px 6px', borderRadius: 4, background: 'var(--cyber-teal)', color: '#000', letterSpacing: '0.05em' }}>AI SUGGEST</div>
+          <div style={{ fontSize: '8px', fontWeight: 800, padding: '4px 6px', borderRadius: 4, background: 'var(--cyber-amber)', color: '#000', letterSpacing: '0.05em' }}>AI SUGGEST</div>
         )}
+        {(recipe.iceGrams && recipe.iceGrams > 0) ? (
+          <div style={{ fontSize: '8px', fontWeight: 800, padding: '4px 6px', borderRadius: 4, background: 'var(--cyber-teal)', color: '#000', letterSpacing: '0.05em' }}>ICED</div>
+        ) : null}
         <div style={{ fontSize: '8px', fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.1em', display: 'flex', flexDirection: 'column' }}>
           <span>{recipe.beanOrigin ? 'SINGLE' : 'HERITAGE'}</span>
           <span>{recipe.beanOrigin ? 'ORIGIN' : 'BLEND'}</span>
@@ -225,7 +229,7 @@ function RecipeV2Card({
         </div>
         <div>
           <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>YIELD</div>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>{recipe.waterGrams}g</div>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>{recipe.waterGrams + (recipe.iceGrams || 0)}g</div>
         </div>
         <div>
             <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>RATIO</div>

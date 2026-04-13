@@ -6,6 +6,7 @@ const prisma = new PrismaClient({ adapter })
 
 const DEFAULT_RECIPES = [
   {
+    id: 'preset-v60-classic',
     name: 'V60 Classic (1:15)',
     method: 'v60',
     coffeeGrams: 15,
@@ -25,6 +26,7 @@ const DEFAULT_RECIPES = [
     ],
   },
   {
+    id: 'preset-v60-hoffmann',
     name: 'V60 Hoffmann Method',
     method: 'v60',
     coffeeGrams: 15,
@@ -42,6 +44,7 @@ const DEFAULT_RECIPES = [
     ],
   },
   {
+    id: 'preset-aeropress-inverted',
     name: 'AeroPress Inverted',
     method: 'aeropress',
     coffeeGrams: 18,
@@ -58,9 +61,50 @@ const DEFAULT_RECIPES = [
       { name: 'Press', targetWeight: 200, targetSeconds: 30, temperature: 0, notes: 'Flip and press slowly' },
     ],
   },
+  {
+    id: 'preset-kielo-hot',
+    name: 'Kielo Coffee - Hot',
+    method: 'v60',
+    coffeeGrams: 15,
+    waterGrams: 240,
+    ratio: 16,
+    grindSize: 'medium',
+    temperature: 90,
+    beanOrigin: 'Kielo Signature',
+    aiGenerated: false,
+    stages: [
+      { name: 'First Pour', targetWeight: 50, targetSeconds: 40, temperature: 90, action: 'stir', notes: 'Gentle stir' },
+      { name: 'Second Pour', targetWeight: 110, targetSeconds: 35, temperature: 90, notes: 'Maintain steady flow' },
+      { name: 'Third Pour', targetWeight: 240, targetSeconds: 75, temperature: 90 },
+      { name: 'Drawdown', targetWeight: 240, targetSeconds: 60, temperature: 0, notes: 'Wait for full drainage' },
+    ],
+  },
+  {
+    id: 'preset-kielo-iced',
+    name: 'Kielo Coffee - Iced',
+    method: 'v60',
+    coffeeGrams: 17,
+    waterGrams: 150,
+    iceGrams: 120,
+    ratio: 15.9,
+    grindSize: 'medium',
+    temperature: 90,
+    beanOrigin: 'Kielo Signature',
+    aiGenerated: false,
+    stages: [
+      { name: 'First Pour', targetWeight: 50, targetSeconds: 40, temperature: 90, action: 'stir', notes: 'Gentle stir' },
+      { name: 'Second Pour', targetWeight: 100, targetSeconds: 35, temperature: 90 },
+      { name: 'Third Pour', targetWeight: 150, targetSeconds: 75, temperature: 90 },
+      { name: 'Drawdown', targetWeight: 150, targetSeconds: 60, temperature: 0 },
+    ],
+  },
 ]
 
 async function main() {
+  console.log('Clearing existing recipes...')
+  await prisma.brewStage.deleteMany({})
+  await prisma.recipe.deleteMany({})
+  
   console.log('Seeding recipes...')
   for (const r of DEFAULT_RECIPES) {
     const { stages, ...recipeData } = r

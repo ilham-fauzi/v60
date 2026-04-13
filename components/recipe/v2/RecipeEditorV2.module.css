@@ -102,6 +102,18 @@
   gap: var(--space-4);
 }
 
+.paramsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+@media (max-width: 480px) {
+  .paramsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .field {
   display: flex;
   flex-direction: column;

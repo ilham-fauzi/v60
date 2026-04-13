@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Play, Pause, Square, SkipForward, RotateCcw, Thermometer, Timer, Weight, Cpu } from 'lucide-react'
+import { Play, Pause, Square, SkipForward, RotateCcw, Thermometer, Timer, Weight, Cpu, Utensils, RefreshCw, Clock, Lock, Unlock, ArrowDown, Info } from 'lucide-react'
 import { useBrewStore } from '@/stores/BrewStore'
 import type { Recipe } from '@/types'
 
@@ -33,17 +33,33 @@ export function DashboardSkeleton() {
   )
 }
 
+const getActionIcon = (action?: string) => {
+  switch (action) {
+    case 'stir': return <Utensils size={14} />
+    case 'swirl': return <RefreshCw size={14} />
+    case 'steep': return <Clock size={14} />
+    case 'open-valve': return <Unlock size={14} />
+    case 'close-valve': return <Lock size={14} />
+    case 'press': return <ArrowDown size={14} />
+    default: return null
+  }
+}
+
 function LiquidPhaseOverlay({ 
   elapsedTime, 
   targetSeconds, 
   targetWeight,
   stageName,
+  action,
+  notes,
   reverseDrawdownEnabled
 }: { 
   elapsedTime: number, 
   targetSeconds: number, 
   targetWeight: number,
   stageName: string,
+  action?: string,
+  notes?: string,
   reverseDrawdownEnabled?: boolean
 }) {
   const isDrawdown = stageName.toLowerCase().includes('drawdown')
@@ -111,6 +127,30 @@ function LiquidPhaseOverlay({
           {remaining}
         </motion.span>
         <span className={styles.liquidTimerLabel}>{stageName}</span>
+        {action && action !== 'none' && (
+           <motion.div 
+              className={styles.actionIndicator}
+              animate={{ 
+                scale: [1, 1.05, 1],
+                boxShadow: [
+                  '0 0 0px var(--cyber-amber-glow)',
+                  '0 0 20px var(--cyber-amber-glow)',
+                  '0 0 0px var(--cyber-amber-glow)'
+                ]
+              }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+           >
+              <div className={styles.actionIconWrapper}>
+                {getActionIcon(action)}
+              </div>
+              <span className={styles.actionText}>{action.replace('-', ' ')} NOW</span>
+           </motion.div>
+        )}
+        {notes && (
+          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontStyle: 'italic', marginTop: 4, maxWidth: '200px', textAlign: 'center' }}>
+            "{notes}"
+          </div>
+        )}
         <span style={{ fontSize: '26px', fontWeight: 900, color: 'var(--cyber-amber)', marginTop: '8px', letterSpacing: '0.05em', lineHeight: 1 }}>
           {targetWeight}g
         </span>
@@ -228,15 +268,17 @@ export function BrewDashboardV2({ recipe }: Props) {
       {/* Header Info */}
       <div className={styles.hudHeader} style={{ padding: 'var(--space-2) 0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
-          <div>
-             <div style={{ color: 'var(--cyber-amber)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 'var(--space-2)' }}>
-              ORIGIN SELECT
+             <div style={{ color: 'var(--cyber-amber)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>
+              MISSION PROFILE
             </div>
-            <h1 style={{ fontSize: 'var(--text-4xl)', fontWeight: 800, letterSpacing: '-0.02em', margin: 0, display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-              {recipe?.name || 'Ethiopia Yirgacheffe'} {recipe?.method || 'V60'}
-              <span style={{ color: 'var(--cyber-amber)' }}>⤢</span>
+            <h1 style={{ fontSize: 'var(--text-3xl)', fontWeight: 900, letterSpacing: '-0.02em', margin: 0, color: '#fff', textTransform: 'uppercase', lineHeight: 1.1 }}>
+              {recipe?.name || 'Ethiopia Yirgacheffe'}
             </h1>
-          </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
+              <span style={{ color: 'var(--cyber-teal)', fontSize: '10px', fontWeight: 900, letterSpacing: '0.05em' }}>{recipe?.method?.toUpperCase() || 'V60'} EXTRACTION</span>
+              <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px' }}>//</span>
+              <span style={{ color: 'var(--text-tertiary)', fontSize: '10px', fontWeight: 700 }}>{recipe?.beanOrigin || 'SINGLE ORIGIN'}</span>
+            </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
             <div 
@@ -424,39 +466,54 @@ export function BrewDashboardV2({ recipe }: Props) {
       </div>
 
       {/* Control Strip */}
-      <div className={styles.controlStrip} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-4)', marginTop: '0' }}>
+      <div className={styles.controlStrip} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-4)', marginTop: 'var(--space-4)' }}>
         {!isBrewing ? (
-          <button 
-            className="btn btn-primary" 
-            style={{ height: 64, padding: '0 40px', background: 'var(--cyber-amber)', color: '#000', fontSize: 'var(--text-lg)', fontWeight: 800, borderRadius: 'var(--radius-xl)' }}
-            onClick={toggleBrew}
-          >
-            <Play fill="#000" size={24} /> INITIATE BREW CYCLE
-          </button>
-        ) : (
           <>
-            <button style={{ 
-              width: 56, height: 56, borderRadius: 'var(--radius-lg)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, color: 'var(--text-secondary)', cursor: 'pointer'
-            }} onClick={stopBrew}>
-              <Square fill="currentColor" size={16} />
-              <span style={{ fontSize: '8px', fontWeight: 600, letterSpacing: '0.1em' }}>STOP</span>
-            </button>
-            <button style={{ 
-               width: 80, height: 80, borderRadius: 'var(--radius-xl)', background: 'var(--cyber-amber)', border: 'none', boxShadow: 'var(--cyber-glow-amber)',
-               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#000', cursor: 'pointer'
-            }} onClick={isPaused ? resumeBrew : pauseBrew}>
-              {isPaused ? <Play fill="#000" size={28} /> : <Pause fill="#000" size={28} />}
-              <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.1em' }}>{isPaused ? 'RESUME' : 'PAUSE'}</span>
-            </button>
-            <button style={{ 
-              width: 56, height: 56, borderRadius: 'var(--radius-lg)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, color: 'var(--text-secondary)', cursor: 'pointer'
-            }} onClick={nextStage}>
-              <SkipForward fill="currentColor" size={16} />
-              <span style={{ fontSize: '8px', fontWeight: 600, letterSpacing: '0.1em' }}>SKIP</span>
+            {recipe?.iceGrams && recipe.iceGrams > 0 ? (
+              <div style={{ background: 'rgba(255, 191, 0, 0.1)', border: '1px solid var(--cyber-amber)', padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)', maxWidth: '400px', textAlign: 'center', marginBottom: 'var(--space-2)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', color: 'var(--cyber-amber)', fontWeight: 800, marginBottom: 'var(--space-2)' }}>
+                  <Info size={16} /> PRE-BREW CHECKLIST
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                  This is an Iced recipe. Add <strong style={{ color: '#fff' }}>~{recipe.iceGrams}g of ice</strong> to your server and <strong>tare your scale to 0g</strong> before initiating the brew cycle.
+                </div>
+              </div>
+            ) : null}
+            <button 
+              className="btn btn-primary" 
+              style={{ height: 64, padding: '0 40px', background: 'var(--cyber-amber)', color: '#000', fontSize: 'var(--text-lg)', fontWeight: 800, borderRadius: 'var(--radius-xl)' }}
+              onClick={toggleBrew}
+            >
+              <Play fill="#000" size={24} /> INITIATE BREW CYCLE
             </button>
           </>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-8)' }}>
+            <button style={{ 
+              width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, color: 'var(--text-tertiary)', cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }} onClick={stopBrew}>
+              <Square fill="currentColor" size={14} />
+              <span style={{ fontSize: '7px', fontWeight: 700, letterSpacing: '0.15em' }}>STOP</span>
+            </button>
+            <button style={{ 
+               width: 90, height: 90, borderRadius: '50%', background: 'var(--cyber-amber)', border: 'none', boxShadow: '0 0 30px rgba(255, 191, 0, 0.3)',
+               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, color: '#000', cursor: 'pointer',
+               transition: 'all 0.2s ease'
+            }} onClick={isPaused ? resumeBrew : pauseBrew}>
+              {isPaused ? <Play fill="#000" size={32} /> : <Pause fill="#000" size={32} />}
+              <span style={{ fontSize: '10px', fontWeight: 900, letterSpacing: '0.1em' }}>{isPaused ? 'RESUME' : 'PAUSE'}</span>
+            </button>
+            <button style={{ 
+              width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, color: 'var(--text-tertiary)', cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }} onClick={nextStage}>
+              <SkipForward fill="currentColor" size={14} />
+              <span style={{ fontSize: '7px', fontWeight: 700, letterSpacing: '0.15em' }}>SKIP</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -467,6 +524,8 @@ export function BrewDashboardV2({ recipe }: Props) {
           targetSeconds={currentStage.targetSeconds}
           targetWeight={currentStage.targetWeight}
           stageName={currentStage.name}
+          action={currentStage.action}
+          notes={currentStage.notes}
           reverseDrawdownEnabled={reverseDrawdownEnabled}
         />
       )}
