@@ -16,7 +16,7 @@ interface Props {
 const DEFAULT_STAGES: Omit<BrewStage, 'id'>[] = [
   { name: 'Blooming', targetWeight: 50, targetSeconds: 50, temperature: 93, notes: 'Degas and saturate grounds' },
   { name: 'Main Pour', targetWeight: 240, targetSeconds: 60, temperature: 93 },
-  { name: 'Drawdown', targetWeight: 0, targetSeconds: 60, temperature: 0 },
+  { name: 'Drawdown', targetWeight: 0, targetSeconds: 30, temperature: 0 },
 ]
 
 export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
@@ -93,10 +93,13 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
     }
 
     // 3. Drawdown
+    const lastPour = result[result.length - 1]
+    const drawdownSeconds = lastPour ? Math.round(lastPour.targetSeconds / 2) : 60
+
     result.push({
       name: 'Drawdown',
       targetWeight: 0,
-      targetSeconds: 60,
+      targetSeconds: drawdownSeconds,
       temperature: 0
     })
 
@@ -424,7 +427,8 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
             {/* Parameters Section */}
             <div className={styles.section} style={{ marginTop: 'var(--space-8)' }}>
               <div className={styles.sectionTitle}>Parameters</div>
-              <div className={styles.grid}>
+              <div className={styles.paramsGrid}>
+                {/* Line 1: Main Weight Stats */}
                 <div className={styles.field}>
                   <label className={styles.label}>Coffee Dose (g)</label>
                   <input 
@@ -436,7 +440,7 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                   />
                 </div>
                 <div className={styles.field}>
-                  <label className={styles.label}>Target Yield (g)</label>
+                  <label className={styles.label}>Water / Yield (g)</label>
                   <input 
                     type="number"
                     step="0.1"
@@ -455,6 +459,8 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                     onChange={e => handleIceChange(parseFloat(e.target.value) || 0)}
                   />
                 </div>
+
+                {/* Line 2: Derivative Stats */}
                 <div className={styles.field}>
                   <label className={styles.label}>Ratio (1:X)</label>
                   <input 
@@ -597,7 +603,17 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                         </div>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 'var(--space-2)', marginTop: 8 }}>
+                      <button 
+                        type="button"  
+                        className={styles.removeStage} 
+                        onClick={() => !isMandatory && removeStage(stage.id)}
+                        style={{ opacity: isMandatory ? 0 : 1, cursor: isMandatory ? 'default' : 'pointer', marginBottom: 8 }}
+                        disabled={isMandatory}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+
+                      <div style={{ gridColumn: '2 / 5', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 2fr)', gap: 'var(--space-3)' }}>
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <div className={styles.fieldLabel}>Action</div>
                             <select 
@@ -627,16 +643,6 @@ export function RecipeEditorV2({ initialRecipe, onSave, onCancel }: Props) {
                             />
                           </div>
                       </div>
-
-                      <button 
-                        type="button"  
-                        className={styles.removeStage} 
-                        onClick={() => !isMandatory && removeStage(stage.id)}
-                        style={{ opacity: isMandatory ? 0 : 1, cursor: isMandatory ? 'default' : 'pointer', marginBottom: 8 }}
-                        disabled={isMandatory}
-                      >
-                        <Trash2 size={14} />
-                      </button>
                     </motion.div>
                   );
                 })}

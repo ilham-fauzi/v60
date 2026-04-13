@@ -19,6 +19,7 @@ model Recipe {
   beanOrigin   String?
   aiGenerated  Boolean     @default(false)
   notes        String?
+  iceGrams     Float?      @default(0)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   stages       BrewStage[]
@@ -33,6 +34,7 @@ model BrewStage {
   targetWeight  Float
   targetSeconds Int
   temperature   Float
+  action        String?   @default("none")
   notes         String?
 }
 
