@@ -14,7 +14,7 @@ interface Props {
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60)
-  const s = seconds % 60
+  const s = Math.floor(seconds % 60)
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
 }
 
@@ -52,7 +52,21 @@ function LiquidPhaseOverlay({
   stageName,
   action,
   notes,
-  reverseDrawdownEnabled
+  reverseDrawdownEnabled,
+  recipeName,
+  totalTargetWeight,
+  currentWeight,
+  currentFlowRate,
+  totalProgress,
+  totalElapsedTime,
+  temperature,
+  isPaused,
+  stopBrew,
+  resumeBrew,
+  pauseBrew,
+  nextStage,
+  stages,
+  currentStageIndex
 }: { 
   elapsedTime: number, 
   targetSeconds: number, 
@@ -60,12 +74,38 @@ function LiquidPhaseOverlay({
   stageName: string,
   action?: string,
   notes?: string,
-  reverseDrawdownEnabled?: boolean
+  reverseDrawdownEnabled?: boolean,
+  recipeName: string,
+  totalTargetWeight: number,
+  currentWeight: number,
+  currentFlowRate: number,
+  totalProgress: number,
+  totalElapsedTime: number,
+  temperature: number,
+  isPaused: boolean,
+  stopBrew: () => void,
+  resumeBrew: () => void,
+  pauseBrew: () => void,
+  nextStage: () => void,
+  stages: any[],
+  currentStageIndex: number
 }) {
+  const activeStageRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (activeStageRef.current) {
+      activeStageRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    }
+  }, [currentStageIndex])
+
   const isDrawdown = stageName.toLowerCase().includes('drawdown')
   const percentage = Math.min(100, (elapsedTime / targetSeconds) * 100)
   const liquidFillHeight = (isDrawdown && reverseDrawdownEnabled) ? Math.max(0, 100 - percentage) : percentage
-  const remaining = Math.max(0, targetSeconds - Math.floor(elapsedTime))
+  
+  const arcRadius = 145;
+  const arcCircumference = 2 * Math.PI * arcRadius;
+  // Make the ring fill according to current stage percentage
+  const arcOffset = arcCircumference - (percentage / 100) * arcCircumference;
   
   // Static random seeds for bubble animation to prevent reshuffling on every frame update
   const bubbles = React.useMemo(() => {
@@ -117,43 +157,167 @@ function LiquidPhaseOverlay({
         </div>
       </motion.div>
 
-      <div className={styles.liquidTimerRing}>
-        <motion.span 
-          key={remaining}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className={styles.liquidTimerNumber}
-        >
-          {remaining}
-        </motion.span>
-        <span className={styles.liquidTimerLabel}>{stageName}</span>
-        {action && action !== 'none' && (
-           <motion.div 
-              className={styles.actionIndicator}
-              animate={{ 
-                scale: [1, 1.05, 1],
-                boxShadow: [
-                  '0 0 0px var(--cyber-amber-glow)',
-                  '0 0 20px var(--cyber-amber-glow)',
-                  '0 0 0px var(--cyber-amber-glow)'
-                ]
-              }}
-              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-           >
-              <div className={styles.actionIconWrapper}>
-                {getActionIcon(action)}
-              </div>
-              <span className={styles.actionText}>{action.replace('-', ' ')} NOW</span>
-           </motion.div>
-        )}
-        {notes && (
-          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontStyle: 'italic', marginTop: 4, maxWidth: '200px', textAlign: 'center' }}>
-            "{notes}"
+      <div className={styles.mobileExtractionUi}>
+        {/* Header */}
+        <div className={styles.extractionHeader}>
+          <div className={styles.extractionHeaderLeft}>
+            <div className={styles.extractionActiveLabel}>EXTRACTION ACTIVE</div>
+            <div className={styles.extractionRecipeName}>{recipeName}</div>
           </div>
+          <div className={styles.extractionHeaderRight}>
+            <div className={styles.extractionTargetLabel}>TARGET</div>
+            <div className={styles.extractionTargetWeight}>{totalTargetWeight.toFixed(1)}g</div>
+          </div>
+        </div>
+
+        {/* Mobile Timeline Strip */}
+        <div className={styles.mobileTimelineCtn} style={{ marginTop: 'var(--space-8)' }}>
+          <div className="hide-scrollbar" style={{ display: 'flex', gap: 'var(--space-4)', overflowX: 'auto', paddingBottom: 'var(--space-2)' }}>
+            {stages.map((stage, idx) => {
+              const isActive = idx === currentStageIndex;
+              const isPast = idx < currentStageIndex;
+              return (
+                <div key={idx} style={{ flex: '0 0 auto', minWidth: '95px' }} ref={isActive ? activeStageRef : null}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', height: 12 }}>
+                      {isActive ? (
+                        <div style={{ width: 10, height: 10, borderRadius: '50%', border: '2px solid cyan', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'cyan' }} />
+                        </div>
+                      ) : (
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: isPast ? 'cyan' : 'rgba(255,255,255,0.2)' }} />
+                      )}
+                    </div>
+                    
+                    <div style={{ fontWeight: 800, fontSize: '9px', letterSpacing: '0.1em', color: isActive ? 'cyan' : 'var(--text-tertiary)', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {stage.name}
+                    </div>
+                    <div style={{ fontSize: '9px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>{stage.targetSeconds}s</span>
+                      <span>•</span>
+                      <span>{stage.targetWeight}g</span>
+                    </div>
+                    {isActive && (
+                      <div style={{ marginTop: '2px', width: '100%', height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+                        <motion.div 
+                          style={{ height: '100%', background: 'cyan', borderRadius: 2 }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percentage}%` }}
+                          transition={{ ease: 'linear', duration: 1 }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Center Ring */}
+        <div className={styles.extractionCenter}>
+          <div className={styles.extractionRingContainer}>
+            <svg width="100%" height="100%" viewBox="0 0 320 320" className={styles.extractionSvg} style={{ overflow: 'visible' }}>
+              <defs>
+                <linearGradient id="neonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00FFFF" />
+                  <stop offset="100%" stopColor="#00bfff" />
+                </linearGradient>
+                <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur1" />
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur2" />
+                  <feMerge>
+                    <feMergeNode in="blur2" />
+                    <feMergeNode in="blur1" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <circle cx="160" cy="160" r={arcRadius} stroke="rgba(0, 255, 255, 0.05)" strokeWidth="16" fill="none" />
+              <circle 
+                cx="160" 
+                cy="160" 
+                r={arcRadius} 
+                stroke="url(#neonGradient)" 
+                strokeWidth="16" 
+                fill="none" 
+                strokeLinecap="round" 
+                strokeDasharray={arcCircumference} 
+                strokeDashoffset={arcOffset} 
+                style={{ transition: 'stroke-dashoffset 1s linear' }} 
+                filter="url(#neonGlow)"
+              />
+            </svg>
+            <div className={styles.extractionRingContent}>
+              <div className={styles.extractionLiveWeightLabel} style={{ textTransform: 'uppercase' }}>{stageName}</div>
+              <div className={styles.extractionLiveWeightValue} style={{ color: 'var(--cyber-amber)', fontSize: '4rem' }}>
+                {formatTime(Math.max(0, targetSeconds - elapsedTime))}
+              </div>
+              <div className={styles.extractionRingStats}>
+                <div className={styles.extractionRingStatCol}>
+                  <div className={styles.extractionRingStatLabel}>STAGE TARGET</div>
+                  <div className={styles.extractionRingStatValue}>{targetWeight.toFixed(1)}g</div>
+                </div>
+                <div className={styles.extractionRingStatDivider} />
+                <div className={styles.extractionRingStatCol}>
+                  <div className={styles.extractionRingStatLabel}>STAGE ELAPSED</div>
+                  <div className={styles.extractionRingStatValue} style={{ color: '#fff' }}>{formatTime(elapsedTime)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Indicators - if available */}
+        {action && action !== 'none' && (
+           <div style={{ position: 'absolute', top: '15%', left: '50%', transform: 'translate(-50%, 0)', zIndex: 42 }}>
+             <motion.div 
+               className={styles.actionIndicator}
+               animate={{ 
+                 scale: [1, 1.05, 1],
+                 boxShadow: [
+                   '0 0 0px var(--cyber-amber-glow)',
+                   '0 0 20px var(--cyber-amber-glow)',
+                   '0 0 0px var(--cyber-amber-glow)'
+                 ]
+               }}
+               transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+             >
+                <div className={styles.actionIconWrapper}>
+                  {getActionIcon(action)}
+                </div>
+                <span className={styles.actionText}>{action.replace('-', ' ')} NOW</span>
+             </motion.div>
+           </div>
         )}
-        <span style={{ fontSize: '26px', fontWeight: 900, color: 'var(--cyber-amber)', marginTop: '8px', letterSpacing: '0.05em', lineHeight: 1 }}>
-          {targetWeight}g
-        </span>
+
+        {/* Bottom Stats */}
+        <div className={styles.extractionBottomStats}>
+          <div className={styles.extractionBottomBox}>
+            <div className={styles.extractionBottomBoxLabel}>TEMPERATURE</div>
+            <div className={styles.extractionBottomBoxValue}>{temperature}°C</div>
+          </div>
+          <div className={styles.extractionBottomBox}>
+            <div className={styles.extractionBottomBoxLabel}>TIME ELAPSED</div>
+            <div className={styles.extractionBottomBoxValue}>{formatTime(totalElapsedTime)}</div>
+          </div>
+        </div>
+
+        {/* Controls Overlay */}
+        <div className={styles.mobileControlsCtn}>
+          <button className={styles.mobileControlBtnStop} onClick={stopBrew}>
+            <div className={styles.mobileControlIconStop} />
+            <span>STOP</span>
+          </button>
+          <button className={styles.mobileControlBtnPause} onClick={isPaused ? resumeBrew : pauseBrew}>
+            {isPaused ? <Play fill="#000" size={24} /> : <Pause fill="#000" size={24} />}
+            <span>{isPaused ? 'RESUME' : 'PAUSE'}</span>
+          </button>
+          <button className={styles.mobileControlBtnSkip} onClick={nextStage}>
+            <SkipForward fill="#aaa" size={20} />
+            <span>SKIP</span>
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -184,6 +348,7 @@ export function BrewDashboardV2({ recipe }: Props) {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const tickRef = useRef(tick)
+  const activeTimelineStageRef = useRef<HTMLDivElement>(null)
   tickRef.current = tick
 
   useEffect(() => {
@@ -200,6 +365,12 @@ export function BrewDashboardV2({ recipe }: Props) {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (activeTimelineStageRef.current) {
+      activeTimelineStageRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    }
+  }, [currentStageIndex])
 
   // Screen Wake Lock API to prevent device from sleeping while brewing
   useEffect(() => {
@@ -377,7 +548,7 @@ export function BrewDashboardV2({ recipe }: Props) {
       </div>
 
       {/* Timeline Strip */}
-      <div className="v2-glass hudTimeline" style={{ padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)' }}>
+      <div className={`v2-glass ${styles.hudTimeline}`} style={{ padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-lg)', fontWeight: 700 }}>
             <span style={{ color: 'var(--cyber-amber)' }}>≈</span> Extraction Phases
@@ -405,6 +576,7 @@ export function BrewDashboardV2({ recipe }: Props) {
             <div 
               key={idx} 
               style={{ flex: '0 0 auto', minWidth: '110px' }}
+              ref={idx === currentStageIndex ? activeTimelineStageRef : null}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                 {/* Active indicator dot */}
@@ -455,7 +627,7 @@ export function BrewDashboardV2({ recipe }: Props) {
                           return (isDrawdown && reverseDrawdownEnabled) ? 100 - p : p
                         })()}%` 
                       }}
-                      transition={{ ease: 'linear' }}
+                      transition={{ ease: 'linear', duration: 1 }}
                     />
                   </div>
                 )}
@@ -527,6 +699,20 @@ export function BrewDashboardV2({ recipe }: Props) {
           action={currentStage.action}
           notes={currentStage.notes}
           reverseDrawdownEnabled={reverseDrawdownEnabled}
+          recipeName={recipe?.name || 'Ethiopian Yirgacheffe'}
+          totalTargetWeight={targetWeight}
+          currentWeight={currentWeight}
+          currentFlowRate={currentFlowRate}
+          totalProgress={totalProgress}
+          totalElapsedTime={totalElapsedTime}
+          temperature={recipe?.temperature ?? 93}
+          isPaused={isPaused}
+          stopBrew={stopBrew}
+          resumeBrew={resumeBrew}
+          pauseBrew={pauseBrew}
+          nextStage={nextStage}
+          stages={stagesWithCumulative}
+          currentStageIndex={currentStageIndex}
         />
       )}
     </div>

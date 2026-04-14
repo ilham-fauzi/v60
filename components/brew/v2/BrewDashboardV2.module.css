@@ -142,6 +142,13 @@
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
   }
 
+  .hudMode .metricsGrid,
+  .hudMode .hudTimeline,
+  .hudMode .hudHeader,
+  .hudMode .controlStrip {
+    display: none !important;
+  }
+
   /* Liquid Timer Screen Overlay (Mobile Only) */
   .liquidOverlayCtn {
     display: block;
@@ -149,9 +156,9 @@
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    z-index: 40; /* Above metrics, below controls */
-    pointer-events: none; /* Passthrough clicks */
+    bottom: 72px;
+    z-index: 40;
+    pointer-events: none;
   }
 
   .liquidWave {
@@ -212,45 +219,226 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
-  .liquidTimerRing {
+  /* NEW MOBILE EXTRACTION UI */
+  .mobileExtractionUi {
     position: absolute;
-    top: 38% !important; /* Move slightly down for better centering on larger displays */
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 250px;
-    height: 250px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 191, 0, 0.2);
-    /* Outer golden ring for depth */
-    box-shadow: 
-      0 0 0 4px rgba(255, 191, 0, 0.05),
-      0 0 50px rgba(255, 191, 0, 0.2), 
-      inset 0 0 30px rgba(255, 191, 0, 0.05);
-    background: rgba(10, 10, 11, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-6);
+    z-index: 41;
+  }
+
+  .extractionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: calc(var(--space-8) + env(safe-area-inset-top));
+  }
+
+  .extractionActiveLabel {
+    color: cyan;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+  }
+
+  .extractionRecipeName {
+    font-size: 24px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin-top: 4px;
+    max-width: 200px;
+  }
+
+  .extractionHeaderRight {
+    text-align: right;
+  }
+
+  .extractionTargetLabel {
+    color: var(--cyber-amber);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+  }
+
+  .extractionTargetWeight {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    margin-top: 4px;
+  }
+
+  .extractionCenter {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .extractionRingContainer {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .extractionSvg {
+    transform: rotate(-90deg);
+    position: absolute;
+    inset: 0;
+  }
+
+  .extractionRingContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+  }
+
+  .extractionLiveWeightLabel {
+    color: #aaa;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+  }
+
+  .extractionLiveWeightValue {
+    display: flex;
+    align-items: baseline;
+    margin-top: var(--space-2);
+    color: var(--cyber-amber);
+    font-size: 5rem;
+    font-weight: 900;
+    line-height: 1;
+    font-family: var(--font-mono);
+  }
+
+  .extractionLiveWeightUnit {
+    color: #888;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-left: 4px;
+  }
+
+  .extractionRingStats {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    margin-top: var(--space-4);
+  }
+
+  .extractionRingStatCol {
+    text-align: center;
+  }
+
+  .extractionRingStatLabel {
+    font-size: 9px;
+    color: #aaa;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .extractionRingStatValue {
+    font-size: 16px;
+    color: cyan;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  .extractionRingStatDivider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .extractionBottomStats {
+    display: flex;
+    gap: var(--space-4);
+    /* Make room for the controls */
+    margin-bottom: 20px; 
+  }
+
+  .extractionBottomBox {
+    flex: 1;
+    background: rgba(25, 25, 26, 0.6);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .extractionBottomBoxLabel {
+    font-size: 10px;
+    color: #aaa;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .extractionBottomBoxValue {
+    font-size: 16px;
+    font-weight: 800;
+    margin-top: 4px;
+    color: #fff;
+  }
+
+  .mobileControlsCtn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-4);
+    pointer-events: auto; /* Since overlay is passthrough */
+  }
+
+  .mobileControlBtnStop, .mobileControlBtnSkip {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-lg);
+    background: rgba(25, 25, 26, 0.9) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 41;
+    gap: 8px;
+    color: #aaa;
+    cursor: pointer;
   }
 
-  .liquidTimerNumber {
-    font-size: 6rem;
-    font-weight: 900;
-    line-height: 1;
-    color: var(--cyber-amber);
-    text-shadow: 0 0 15px rgba(255, 191, 0, 0.6);
+  .mobileControlIconStop {
+    width: 14px;
+    height: 14px;
+    background: #ff758f;
+    border-radius: 2px;
   }
 
-  .liquidTimerLabel {
+  .mobileControlBtnPause {
+    width: 110px;
+    height: 80px;
+    border-radius: var(--radius-lg);
+    background: var(--cyber-amber) !important;
+    border: none !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #000;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(255, 191, 0, 0.2);
+  }
+
+  .mobileControlBtnStop span, .mobileControlBtnSkip span, .mobileControlBtnPause span {
     font-size: 10px;
     font-weight: 800;
-    letter-spacing: 0.2em;
-    color: #fff;
-    text-transform: uppercase;
-    margin-top: var(--space-4);
+    letter-spacing: 0.1em;
   }
 
   /* Action Indicators */
