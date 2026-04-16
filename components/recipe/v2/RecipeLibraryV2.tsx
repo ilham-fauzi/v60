@@ -81,7 +81,7 @@ export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => v
           animate={{ opacity: 1, y: 0 }}
           className="relative group mb-8"
         >
-          <div className="relative overflow-hidden rounded-[1.5rem] h-[200px] md:h-[220px] bg-surface-container-lowest shadow-[0_16px_32px_rgba(255,191,0,0.06)] border border-white/5">
+          <div className="relative overflow-hidden rounded-[1.5rem] h-[240px] md:h-[280px] bg-surface-container-lowest shadow-[0_16px_32px_rgba(255,191,0,0.06)] border border-white/5">
             <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-[#131313]/50 to-transparent z-10" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#131313] via-transparent to-transparent z-10" />
             <img 
@@ -101,7 +101,7 @@ export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => v
                 </div>
               </div>
               
-              <h2 className="text-2xl md:text-3xl font-display font-black tracking-tighter text-on-background uppercase leading-none">
+              <h2 className="text-4xl md:text-6xl font-display font-black tracking-[-0.05em] text-on-background uppercase leading-[0.85]">
                 {featuredRecipe.name}
               </h2>
               
@@ -276,7 +276,7 @@ function RecipeV2Card({
         boxShadow: isActive ? '0 0 30px rgba(255, 191, 0, 0.1)' : 'none'
       }}
     >
-      <div className="h-40 relative overflow-hidden">
+      <div className="h-28 relative overflow-hidden">
         <img 
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60" 
           alt={recipe.name} 
@@ -292,29 +292,29 @@ function RecipeV2Card({
         )}
       </div>
 
-      <div className="p-5 space-y-4">
+      <div className="p-3 space-y-2">
         <div className="flex justify-between items-start">
-          <h4 className="text-lg font-display font-black text-on-surface uppercase tracking-tight leading-none group-hover:text-primary-container transition-colors">
+          <h4 className="text-sm font-display font-black text-on-surface uppercase tracking-tight leading-none group-hover:text-primary-container transition-colors">
             {recipe.name}
           </h4>
           <div className="flex items-center gap-1 text-primary-container">
-            <Star size={12} fill="currentColor" />
-            <span className="text-[10px] font-black">4.8</span>
+            <Star size={8} fill="currentColor" />
+            <span className="text-[8px] font-black">4.8</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[8px] text-on-surface-variant font-display uppercase tracking-widest font-black opacity-60">
+        <div className="flex items-center gap-2 text-[7px] text-on-surface-variant font-display uppercase tracking-widest font-black opacity-60">
           <span>{recipe.method}</span>
           <span className="w-1 h-1 bg-white/10 rounded-full" />
           <span>{recipe.coffeeGrams}g / {recipe.waterGrams}g</span>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-white/5">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center">
-              <FlaskConical size={10} className="text-primary-container" />
+        <div className="flex items-center justify-between pt-1.5 border-t border-white/5">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3.5 h-3.5 rounded-full bg-white/5 flex items-center justify-center">
+              <FlaskConical size={7} className="text-primary-container" />
             </div>
-            <span className="text-[9px] text-on-surface-variant font-bold uppercase tracking-widest opacity-40">Operator: 0xBrew</span>
+            <span className="text-[7px] text-on-surface-variant font-bold uppercase tracking-widest opacity-40">0xBrew</span>
           </div>
           <div className="flex gap-2">
             <button 
