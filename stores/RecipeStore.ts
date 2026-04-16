@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage, devtools } from 'zustand/middleware'
 import type { Recipe, RecipeState } from '@/types'
 import { shareRecipe as _shareRecipe, revokeShare as _revokeShare } from '@/lib/share'
+import { backendFetch } from '@/services/backend'
 
 interface RecipeActions {
   addRecipe: (recipe: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'stages'> & { stages: Omit<Recipe['stages'][number], 'id'>[] }) => Promise<Recipe>
@@ -28,17 +29,17 @@ export const useRecipeStore = create<RecipeState & RecipeActions>()(
         initRecipes: async () => {
           set({ isLoading: true })
           try {
-            const res = await fetch('/api/recipes')
-            const serverRecipes = await res.json()
+            const serverRecipes = await backendFetch('/v1/recipes')
             
             set((state: RecipeState) => {
               const localRecipes = state.recipes.filter(r => !r.id.startsWith('cloud-'))
-              const markedServer = serverRecipes.map((r: Recipe) => ({ 
+              const markedServer = (Array.isArray(serverRecipes) ? serverRecipes : []).map((r: Recipe) => ({ 
+
                 ...r,
                 // Sanitize Drawdown targetWeight
-                stages: r.stages.map((s: any) => ({
+                stages: (r.stages || []).map((s: any) => ({
                   ...s,
-                  targetWeight: s.name.toLowerCase().includes('drawdown') ? 0 : s.targetWeight
+                  targetWeight: s.name?.toLowerCase().includes('drawdown') ? 0 : s.targetWeight
                 }))
               }))
 
@@ -64,12 +65,10 @@ export const useRecipeStore = create<RecipeState & RecipeActions>()(
         },
 
         addRecipe: async (recipeData) => {
-          const res = await fetch('/api/recipes', {
+          const newRecipe = await backendFetch('/v1/recipes', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(recipeData),
           })
-          const newRecipe = await res.json()
           set((s: RecipeState) => ({ recipes: [newRecipe, ...s.recipes] }))
           return newRecipe
         },
@@ -89,12 +88,10 @@ export const useRecipeStore = create<RecipeState & RecipeActions>()(
             return
           }
 
-          const res = await fetch(`/api/recipes/${id}`, {
+          const updated = await backendFetch(`/v1/recipes/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updates),
           })
-          const updated = await res.json()
           set((s: RecipeState) => ({
             recipes: s.recipes.map((r: Recipe) => (r.id === id ? updated : r)),
           }))
@@ -104,7 +101,7 @@ export const useRecipeStore = create<RecipeState & RecipeActions>()(
           // Revoke any active share before deleting
           try { await _revokeShare(id) } catch { /* safe to ignore */ }
           if (!id.startsWith('temp-') && !id.startsWith('loc-')) {
-            await fetch(`/api/recipes/${id}`, { method: 'DELETE' })
+            await backendFetch(`/v1/recipes/${id}`, { method: 'DELETE' })
           }
           set((s: RecipeState) => ({
             recipes: s.recipes.filter((r) => r.id !== id),

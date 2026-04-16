@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useBrewStore } from '@/stores/BrewStore'
 import { useRecipeStore } from '@/stores/RecipeStore'
+import { useJournalStore } from '@/stores/JournalStore'
+import { useMetricStore } from '@/stores/MetricStore'
 import dynamic from 'next/dynamic'
 import { DesktopLayout } from '@/components/layout/v2/DesktopLayout'
 import { DashboardSkeleton } from '@/components/brew/v2/BrewDashboardV2'
@@ -20,11 +22,21 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('')
   const { isFocusMode, toggleFocusMode, activeRecipe, setActiveRecipe, tare } = useBrewStore()
   const { initRecipes, recipes } = useRecipeStore()
+  const { totalRecipes, totalBrews, favoriteOrigin, avgRating, initMetrics } = useMetricStore()
+  const initLogs = useJournalStore(s => s.initLogs)
 
-  // Initialize Data from SQLite
+  // 1. Initial Data Fetch (Runs once on mount)
   useEffect(() => {
     initRecipes()
-  }, [initRecipes])
+    initMetrics()
+  }, [initRecipes, initMetrics])
+
+  // 2. Sync Logs once Recipes are loaded (Depends on recipes reference)
+  useEffect(() => {
+    if (recipes.length > 0) {
+      initLogs(recipes)
+    }
+  }, [recipes, initLogs])
 
   // Port Global Keyboard Shortcuts
   useEffect(() => {
@@ -70,12 +82,12 @@ export default function Home() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: 'var(--space-3) 0', borderBottom: '1px solid var(--cyber-border)', fontSize: '10px', fontWeight: 700 }}>
-          <span style={{ color: 'var(--text-secondary)' }}>AVG TEMP</span>
-          <span style={{ color: 'var(--cyber-teal)' }}>92.8°C</span>
+          <span style={{ color: 'var(--text-secondary)' }}>BREW SESSIONS</span>
+          <span style={{ color: 'var(--cyber-teal)' }}>{totalBrews}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: 'var(--space-3) 0', borderBottom: '1px solid var(--cyber-border)', fontSize: '10px', fontWeight: 700 }}>
-          <span style={{ color: 'var(--text-secondary)' }}>VARIANCE</span>
-          <span style={{ color: '#ffb084' }}>+1.2%</span>
+          <span style={{ color: 'var(--text-secondary)' }}>AVG RATING</span>
+          <span style={{ color: '#ffb084' }}>{avgRating.toFixed(1)}/5.0</span>
         </div>
       </div>
 
@@ -117,8 +129,8 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-tertiary)' }}>
-          <span>Current Yield</span>
-          <span style={{ color: 'var(--cyber-teal)' }}>248.5g</span>
+          <span>Total Recipes</span>
+          <span style={{ color: 'var(--cyber-teal)' }}>{totalRecipes} ACTIVE</span>
         </div>
       </div>
 
@@ -146,7 +158,7 @@ export default function Home() {
 
       <div style={{ padding: '0 var(--space-2)' }}>
         <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-          Based on 14 recent entries, your optimal extraction window for Washed Kenya beans is 3:05 - 3:20 at 94°C.
+          Your profile is strongest with {favoriteOrigin} coffee. Maintaining an average rating of {avgRating.toFixed(1)} across {totalBrews} sessions.
         </p>
       </div>
 
@@ -158,21 +170,21 @@ export default function Home() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: '0 var(--space-2)' }}>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: 'var(--space-2)' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Avg TDS</span>
-            <span style={{ fontWeight: 600 }}>1.42%</span>
+            <span style={{ color: 'var(--text-secondary)' }}>GLOBAL RATING</span>
+            <span style={{ fontWeight: 600 }}>{(avgRating / 5 * 100).toFixed(0)}%</span>
           </div>
           <div style={{ height: 4, background: 'var(--bg-tertiary)', borderRadius: 2 }}>
-            <div style={{ width: '80%', height: '100%', background: 'var(--cyber-teal)', borderRadius: 2 }} />
+            <div style={{ width: `${(avgRating / 5 * 100)}%`, height: '100%', background: 'var(--cyber-teal)', borderRadius: 2 }} />
           </div>
         </div>
 
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: 'var(--space-2)' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Extraction Stability</span>
-            <span style={{ fontWeight: 600, color: '#22c55e' }}>High</span>
+            <span style={{ color: 'var(--text-secondary)' }}>LIBRARY COVERAGE</span>
+            <span style={{ fontWeight: 600, color: '#22c55e' }}>{totalRecipes > 0 ? 'ACTIVE' : 'NONE'}</span>
           </div>
           <div style={{ height: 4, background: 'var(--bg-tertiary)', borderRadius: 2 }}>
-            <div style={{ width: '92%', height: '100%', background: '#22c55e', borderRadius: 2 }} />
+            <div style={{ width: totalRecipes > 0 ? '100%' : '0%', height: '100%', background: '#22c55e', borderRadius: 2 }} />
           </div>
         </div>
       </div>

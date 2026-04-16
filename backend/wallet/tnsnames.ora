@@ -1,0 +1,12 @@
+vsixtypro_high = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.ap-batam-1.oraclecloud.com))(connect_data=(service_name=ge8ab95c727bc6b_vsixtypro_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+vsixtypro_medium = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.ap-batam-1.oraclecloud.com))(connect_data=(service_name=ge8ab95c727bc6b_vsixtypro_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+vsixtypro_low = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.ap-batam-1.oraclecloud.com))(connect_data=(service_name=ge8ab95c727bc6b_vsixtypro_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+vsixtypro_tp = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.ap-batam-1.oraclecloud.com))(connect_data=(service_name=ge8ab95c727bc6b_vsixtypro_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+vsixtypro_tpurgent = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.ap-batam-1.oraclecloud.com))(connect_data=(service_name=ge8ab95c727bc6b_vsixtypro_tpurgent.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+
+

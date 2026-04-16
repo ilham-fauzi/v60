@@ -1,9 +1,10 @@
 'use client'
 
 import React from 'react'
-import { Coffee, Library, History, Settings, Zap, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Coffee, Library, History, Settings, Zap, ChevronLeft, ChevronRight, LogOut, FlaskConical, Share2, Star, PlayCircle, Edit, Trash2, Shield, RefreshCw, Plus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useBrewStore } from '@/stores/BrewStore'
+import { supabase } from '@/lib/supabase'
 import styles from './v2.module.css'
 
 const NAV_ITEMS = [
@@ -32,17 +33,18 @@ export function DesktopSidebar({ activeTab, onTabChange }: { activeTab: string, 
 
       {/* Brand */}
       <div className={styles.sidebarBrand}>
-        <div className={styles.brandLogo}>
-          <Coffee size={18} color="#000" fill="#000" />
+        <div className="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(255,191,0,0.2)]">
+          <FlaskConical size={20} className="text-on-primary-container" />
         </div>
         {!collapsed && (
-          <motion.span 
+          <motion.div 
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            className={styles.brandText}
+            className="flex flex-col"
           >
-            V60
-          </motion.span>
+            <span className="font-display font-black text-xs tracking-widest text-primary-container uppercase">BrewForce</span>
+            <span className="font-display text-[8px] tracking-[0.2em] text-on-surface-variant font-bold opacity-50 uppercase">Neural v2.4</span>
+          </motion.div>
         )}
       </div>
 
@@ -102,6 +104,22 @@ export function DesktopSidebar({ activeTab, onTabChange }: { activeTab: string, 
         >
           <Settings size={18} />
           {!collapsed && <span className={styles.footerLabel}>Settings</span>}
+        </button>
+
+        <button 
+          onClick={() => supabase.auth.signOut()}
+          className="btn btn-ghost" 
+          style={{ 
+            justifyContent: collapsed ? 'center' : 'flex-start', 
+            width: '100%', 
+            padding: collapsed ? 'var(--space-3) 0' : undefined,
+            color: 'var(--error, #ff8a8a)',
+            opacity: 0.7
+          }}
+          title={collapsed ? 'Sign Out' : undefined}
+        >
+          <LogOut size={18} />
+          {!collapsed && <span className={styles.footerLabel}>Sign Out</span>}
         </button>
         
         {!collapsed ? (

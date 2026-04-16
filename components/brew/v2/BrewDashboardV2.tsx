@@ -439,10 +439,10 @@ export function BrewDashboardV2({ recipe }: Props) {
       {/* Header Info */}
       <div className={styles.hudHeader} style={{ padding: 'var(--space-2) 0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
-             <div style={{ color: 'var(--cyber-amber)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>
+             <div style={{ color: 'var(--cyber-amber)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '4px' }}>
               MISSION PROFILE
             </div>
-            <h1 style={{ fontSize: 'var(--text-3xl)', fontWeight: 900, letterSpacing: '-0.02em', margin: 0, color: '#fff', textTransform: 'uppercase', lineHeight: 1.1 }}>
+            <h1 style={{ fontSize: 'clamp(1.2rem, 3.5vh, 1.8rem)', fontWeight: 900, letterSpacing: '-0.02em', margin: 0, color: '#fff', textTransform: 'uppercase', lineHeight: 1.1 }}>
               {recipe?.name || 'Ethiopia Yirgacheffe'}
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
@@ -478,13 +478,13 @@ export function BrewDashboardV2({ recipe }: Props) {
       {/* Main Metric Cockpit */}
       <div className={styles.metricsGrid}>
         {/* Weight Panel */}
-        <div className="v2-glass" style={{ padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
-            <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-secondary)' }}>REAL-TIME WEIGHT</div>
-            <Weight size={16} color="var(--cyber-amber)" />
+        <div className="v2-glass" style={{ padding: 'clamp(8px, 1.2vh, 16px) clamp(10px, 2vw, 20px)', borderRadius: 'var(--radius-xl)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'clamp(4px, 0.8vh, 12px)' }}>
+            <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-secondary)' }}>REAL-TIME WEIGHT</div>
+            <Weight size={14} color="var(--cyber-amber)" />
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 'var(--space-4)' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 'clamp(6px, 1vh, 16px)' }}>
             <span className={styles.metricValue}>
               {currentWeight.toFixed(1)}
             </span>
@@ -503,19 +503,19 @@ export function BrewDashboardV2({ recipe }: Props) {
         </div>
 
         {/* Right sub-grid for Timer and Flow Rate */}
-        <div className={styles.hudMetricsRight} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+        <div className={styles.hudMetricsRight} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.2vh, 16px)' }}>
           {/* Timer Panel */}
           <div className="v2-glass" style={{ 
-            padding: 'var(--space-5)', 
+            padding: 'clamp(6px, 1vh, 16px) clamp(10px, 2vw, 16px)', 
             borderRadius: 'var(--radius-xl)', 
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center'
           }}>
-            <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>MASTER TIMER</div>
+            <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: 'clamp(2px, 0.6vh, 8px)' }}>MASTER TIMER</div>
             <span style={{ 
-                fontSize: '3.5rem', 
+                fontSize: 'clamp(1.8rem, 4vh, 3.5rem)', 
                 fontWeight: 800, 
                 lineHeight: 1,
                 color: isBrewing && !isPaused ? 'var(--cyber-teal)' : '#fff',
@@ -526,10 +526,10 @@ export function BrewDashboardV2({ recipe }: Props) {
           </div>
 
           {/* Flow Rate Panel */}
-          <div className="v2-glass" style={{ padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>FLOW RATE</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 'var(--space-4)' }}>
-              <span style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>
+          <div className="v2-glass" style={{ padding: 'clamp(6px, 1vh, 16px) clamp(10px, 2vw, 16px)', borderRadius: 'var(--radius-xl)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: 'clamp(2px, 0.6vh, 8px)' }}>FLOW RATE</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 'clamp(4px, 0.6vh, 8px)' }}>
+              <span style={{ fontSize: '1.6rem', fontWeight: 800, lineHeight: 1 }}>
                 {currentFlowRate.toFixed(1)}
               </span>
               <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)', marginLeft: 'var(--space-2)', fontWeight: 600 }}>g/s</span>
@@ -548,9 +548,9 @@ export function BrewDashboardV2({ recipe }: Props) {
       </div>
 
       {/* Timeline Strip */}
-      <div className={`v2-glass ${styles.hudTimeline}`} style={{ padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-lg)', fontWeight: 700 }}>
+      <div className={`v2-glass ${styles.hudTimeline}`} style={{ padding: 'clamp(6px, 1vh, 16px) clamp(10px, 2vw, 20px)', borderRadius: 'var(--radius-xl)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'clamp(4px, 0.6vh, 12px)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-base)', fontWeight: 700 }}>
             <span style={{ color: 'var(--cyber-amber)' }}>≈</span> Extraction Phases
           </div>
           <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em' }}>
@@ -559,7 +559,7 @@ export function BrewDashboardV2({ recipe }: Props) {
         </div>
         
         {/* Phase progress bar */}
-        <div style={{ width: '100%', background: 'rgba(255,255,255,0.05)', height: 4, borderRadius: 2, position: 'relative', marginBottom: 'var(--space-4)' }}>
+        <div style={{ width: '100%', background: 'rgba(255,255,255,0.05)', height: 3, borderRadius: 2, position: 'relative', marginBottom: 'clamp(6px, 0.8vh, 14px)' }}>
           <motion.div 
             style={{ 
               width: `${Math.min(100, (currentStageIndex + 1) / (stagesWithCumulative.length || 1) * 100)}%`,
@@ -638,7 +638,7 @@ export function BrewDashboardV2({ recipe }: Props) {
       </div>
 
       {/* Control Strip */}
-      <div className={styles.controlStrip} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-4)', marginTop: 'var(--space-4)' }}>
+      <div className={styles.controlStrip}>
         {!isBrewing ? (
           <>
             {recipe?.iceGrams && recipe.iceGrams > 0 ? (
@@ -653,7 +653,7 @@ export function BrewDashboardV2({ recipe }: Props) {
             ) : null}
             <button 
               className="btn btn-primary" 
-              style={{ height: 64, padding: '0 40px', background: 'var(--cyber-amber)', color: '#000', fontSize: 'var(--text-lg)', fontWeight: 800, borderRadius: 'var(--radius-xl)' }}
+              style={{ height: 52, padding: '0 32px', background: 'var(--cyber-amber)', color: '#000', fontSize: 'var(--text-base)', fontWeight: 800, borderRadius: 'var(--radius-xl)' }}
               onClick={toggleBrew}
             >
               <Play fill="#000" size={24} /> INITIATE BREW CYCLE

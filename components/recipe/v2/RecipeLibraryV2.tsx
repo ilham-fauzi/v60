@@ -2,14 +2,13 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Coffee, Ghost, ArrowRight, Trash2, Copy, Edit3, Share2, Check } from 'lucide-react'
+import { Plus, Coffee, Ghost, ArrowRight, Trash2, Copy, Edit3, Share2, Check, FlaskConical, Star, PlayCircle, Edit, Shield, RefreshCw } from 'lucide-react'
 import { useRecipeStore } from '@/stores/RecipeStore'
 import { useBrewStore } from '@/stores/BrewStore'
 import { encodeRecipeForSharing, generateRecipeSlug } from '@/utils/recipe-sharing'
 import type { Recipe } from '@/types'
 
 import styles from './RecipeLibraryV2.module.css'
-
 import { RecipeEditorV2 } from './RecipeEditorV2'
 
 export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => void }) {
@@ -27,7 +26,6 @@ export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => v
 
   const handleEdit = (r: Recipe) => {
     if (r.id.startsWith('preset-')) {
-      // Clone preset before editing
       cloneRecipe(r.id).then(cloned => {
         if (cloned) setEditingRecipe(cloned)
       })
@@ -52,8 +50,6 @@ export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => v
   }
 
   const handleNewFormula = () => {
-    setEditingRecipe(null) // Reset to create new
-    // Open editor with empty or default 
     const defaultTemplate: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'> = {
       name: `New Formula #${custom.length + 1}`,
       method: 'v60',
@@ -71,87 +67,164 @@ export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => v
         { id: 's3', name: 'Drawdown', targetWeight: 0, targetSeconds: 60, temperature: 0 }
       ]
     }
-    // For now, shortcut to adding it directly to show the library works, or open editor
-    // Let's open editor with this template:
     setEditingRecipe({ ...defaultTemplate, id: 'new', createdAt: '', updatedAt: '' } as Recipe)
   }
 
+  const featuredRecipe = presets[0] || recipes[0]
+
   return (
-    <div className={styles.container}>
-      {/* Header */}
-      <div className={styles.header}>
-        <div>
-          <h1 style={{ fontSize: 'var(--text-3xl)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 'var(--space-1)' }}>
-            Digital Library
-          </h1>
-          <p style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-sm)' }}>
-             Manage and optimize your extraction parameters
-          </p>
-        </div>
-        <button 
-          onClick={handleNewFormula}
-          className="btn btn-primary" 
-          style={{ height: 48, padding: '0 var(--space-6)', background: 'var(--cyber-amber)', color: '#000', fontWeight: 800 }}
+    <div className={styles.container} style={{ perspective: '1000px' }}>
+      {/* Featured Recipe Hero */}
+      {featuredRecipe && (
+        <motion.section 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative group mb-16"
         >
-          <Plus size={18} fill="currentColor" /> NEW FORMULA
-        </button>
-      </div>
+          <div className="relative overflow-hidden rounded-[2rem] h-[400px] md:h-[450px] bg-surface-container-lowest shadow-[0_32px_64px_rgba(255,191,0,0.06)] border border-white/5">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-[#131313]/50 to-transparent z-10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#131313] via-transparent to-transparent z-10" />
+            <img 
+              className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-50 transition-all duration-1000 group-hover:scale-105" 
+              alt="Cinematic coffee brewing"
+              src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=2000"
+            />
+            
+            <div className="absolute bottom-10 left-10 z-20 space-y-6 max-w-2xl">
+              <div className="flex items-center gap-4">
+                <span className="px-3 py-1 bg-primary-container text-on-primary-container text-[10px] font-black uppercase tracking-widest rounded-md">
+                  Masterwork Formula
+                </span>
+                <div className="flex items-center gap-1 text-[#00f2ff]">
+                  <Star size={14} fill="currentColor" />
+                  <span className="text-sm font-bold">4.9 precision</span>
+                </div>
+              </div>
+              
+              <h2 className="text-5xl md:text-6xl font-display font-black tracking-tighter text-on-background uppercase leading-none">
+                {featuredRecipe.name}
+              </h2>
+              
+              <p className="text-on-surface-variant text-base md:text-lg leading-relaxed max-w-lg font-medium opacity-80">
+                A molecular reconstruction of traditional {featuredRecipe.method} extraction. 
+                Synchronized at {featuredRecipe.temperature}°C for peak clarity.
+              </p>
+              
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => handleSelect(featuredRecipe)}
+                  className="px-8 py-3.5 bg-secondary-container/10 backdrop-blur-md text-secondary-container border border-secondary-container/30 font-display uppercase text-xs font-black tracking-[0.2em] rounded-xl transition-all hover:bg-secondary-container hover:text-on-secondary active:scale-95 flex items-center gap-2"
+                >
+                  <FlaskConical size={16} />
+                  Initiate Extraction
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+      )}
 
-      {/* Lab Insights Banner */}
-      <div className="v2-glass" style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 'var(--space-3)', 
-        padding: 'var(--space-4)', 
-        marginBottom: 'var(--space-6)', 
-        borderLeft: '2px solid var(--cyber-amber)' 
-      }}>
-        <div style={{ padding: '6px', background: 'rgba(255,191,0,0.1)', borderRadius: 8, color: 'var(--cyber-amber)' }}>
-          <Coffee size={16} />
+      {/* Community Library Section */}
+      <section className="space-y-8 mb-16">
+        <div className="flex justify-between items-end border-b border-white/5 pb-4">
+          <div>
+            <span className="text-[10px] font-display uppercase tracking-[0.3em] text-[#00f2ff] font-bold">Open Source Protocols</span>
+            <h3 className="text-3xl font-display font-black text-on-background uppercase tracking-tight">Community Library</h3>
+          </div>
+          <button 
+            onClick={handleNewFormula}
+            className="flex items-center gap-2 px-6 py-2 bg-primary-container text-on-primary-container text-[10px] font-black uppercase tracking-widest rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,191,0,0.2)]"
+          >
+            <Plus size={14} /> NEW FORMULA
+          </button>
         </div>
-        <div>
-          <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.1em', color: 'var(--cyber-amber)', marginRight: 'var(--space-2)' }}>
-            LABORATORY INSIGHTS
-          </span>
-          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-            Optimized extraction protocol identified for Gesha varietals.
-          </span>
-        </div>
-      </div>
 
-      {/* Grid Sections */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-        <div className="cyber-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>Custom Formulations</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {presets.slice(0, 6).map((r) => (
+            <RecipeV2Card 
+              key={r.id} 
+              recipe={r} 
+              isActive={activeRecipe?.id === r.id} 
+              onSelect={() => handleSelect(r)}
+              onEdit={() => handleEdit(r)}
+            />
+          ))}
         </div>
-        <div className={styles.grid}>
+      </section>
+
+      {/* Alchemy Vault Section (List View) */}
+      <section className="space-y-8">
+        <div className="flex justify-between items-end border-b border-white/5 pb-4">
+          <div>
+            <span className="text-[10px] font-display uppercase tracking-[0.3em] text-primary-container font-bold">Encrypted Storage</span>
+            <h3 className="text-3xl font-display font-black text-on-background uppercase tracking-tight">My Alchemy Vault</h3>
+          </div>
+          <div className="flex items-center gap-2 text-primary-container/80 font-display text-[10px] uppercase tracking-widest font-black">
+            <Shield size={12} />
+            Secure Node Active
+          </div>
+        </div>
+
+        <div className="space-y-3">
           {custom.map((r) => (
-            <RecipeV2Card 
-              key={r.id} 
-              recipe={r} 
-              isActive={activeRecipe?.id === r.id} 
-              onSelect={() => handleSelect(r)}
-              onEdit={() => handleEdit(r)}
-              onDelete={() => deleteRecipe(r.id)}
-            />
-          ))}
-        </div>
+            <div 
+              key={r.id}
+              onClick={() => handleSelect(r)}
+              className="flex items-center justify-between p-6 bg-surface-container-low/40 hover:bg-surface-container-high/60 transition-all duration-300 group rounded-2xl border border-white/5 cursor-pointer"
+            >
+              <div className="flex items-center gap-6">
+                <div className="w-14 h-14 bg-[#1a1a1a] rounded-xl flex items-center justify-center text-primary-container ring-1 ring-white/5 shadow-inner">
+                  <FlaskConical size={24} />
+                </div>
+                <div>
+                  <h5 className="text-on-surface font-display font-bold text-lg uppercase tracking-tight group-hover:text-primary-container transition-colors">{r.name}</h5>
+                  <div className="flex items-center gap-3">
+                    <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold opacity-60">METHOD: {r.method}</p>
+                    <span className="w-1 h-1 bg-white/10 rounded-full" />
+                    <p className="text-[10px] text-primary-container uppercase tracking-widest font-bold">LATEST_BREW: 12.04.24</p>
+                  </div>
+                </div>
+              </div>
 
-        <div className="cyber-panel-header" style={{ marginTop: 'var(--space-8)' }}>System Presets</div>
-        <div className={styles.grid}>
-          {presets.map((r) => (
-            <RecipeV2Card 
-              key={r.id} 
-              recipe={r} 
-              isActive={activeRecipe?.id === r.id} 
-              onSelect={() => handleSelect(r)}
-              onEdit={() => handleEdit(r)}
-            />
+              <div className="flex items-center gap-12">
+                <div className="hidden lg:flex flex-col items-end gap-1">
+                  <span className="text-xs text-[#00f2ff] font-mono font-bold tracking-tighter">1:{r.ratio} RATIO</span>
+                  <span className="text-[9px] text-on-surface-variant font-black uppercase tracking-widest opacity-40">{r.temperature}°C THERMALS</span>
+                </div>
+                <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleEdit(r); }}
+                    className="p-2 text-on-surface-variant hover:text-primary-container transition-colors"
+                  >
+                    <Edit size={18} />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleSelect(r); }}
+                    className="p-2 text-on-surface-variant hover:text-[#00f2ff] transition-colors"
+                  >
+                    <PlayCircle size={18} />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); if(confirm('Erase formula?')) deleteRecipe(r.id); }}
+                    className="p-2 text-on-surface-variant hover:text-error transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            </div>
           ))}
+          
+          <div className="flex justify-center pt-8">
+            <button className="flex items-center gap-3 px-10 py-4 border border-white/5 rounded-2xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-all group">
+              <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700 text-primary-container" />
+              <span className="text-[10px] font-display font-black uppercase tracking-[0.2em]">Synchronize Encrypted Vault...</span>
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Sidebar Editor */}
+      {/* Editor Overlay */}
       {editingRecipe && (
         <RecipeEditorV2 
           initialRecipe={editingRecipe.id === 'new' ? null : editingRecipe}
@@ -196,96 +269,69 @@ function RecipeV2Card({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onSelect}
-      className="v2-glass"
+      className="bg-[rgba(32,31,31,0.6)] backdrop-blur-[20px] rounded-2xl border border-white/5 overflow-hidden group hover:border-[#ffe2ab]/30 transition-all duration-300"
       style={{
-        padding: 'var(--space-5)',
-        borderRadius: 'var(--radius-xl)',
         cursor: 'pointer',
-        border: isActive ? '1px solid var(--cyber-amber)' : '1px solid var(--cyber-border)',
-        position: 'relative',
-        transition: 'border-color 0.2s ease',
-        boxShadow: isActive ? '0 0 20px rgba(255, 191, 0, 0.1)' : 'none'
+        border: isActive ? '1px solid var(--cyber-amber)' : '1px solid rgba(255,255,255,0.05)',
+        boxShadow: isActive ? '0 0 30px rgba(255, 191, 0, 0.1)' : 'none'
       }}
     >
-      <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-6)' }}>
-        {recipe.aiGenerated && (
-          <div style={{ fontSize: '8px', fontWeight: 800, padding: '4px 6px', borderRadius: 4, background: 'var(--cyber-amber)', color: '#000', letterSpacing: '0.05em' }}>AI SUGGEST</div>
-        )}
-        {(recipe.iceGrams && recipe.iceGrams > 0) ? (
-          <div style={{ fontSize: '8px', fontWeight: 800, padding: '4px 6px', borderRadius: 4, background: 'var(--cyber-teal)', color: '#000', letterSpacing: '0.05em' }}>ICED</div>
-        ) : null}
-        <div style={{ fontSize: '8px', fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.1em', display: 'flex', flexDirection: 'column' }}>
-          <span>{recipe.beanOrigin ? 'SINGLE' : 'HERITAGE'}</span>
-          <span>{recipe.beanOrigin ? 'ORIGIN' : 'BLEND'}</span>
-        </div>
-      </div>
-
-      <h3 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, marginBottom: 'var(--space-8)', lineHeight: 1.1 }}>{recipe.name}</h3>
-
-      <div className="responsive-grid-4" style={{ marginBottom: 'var(--space-8)' }}>
-        <div>
-          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>DOSE</div>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>{recipe.coffeeGrams}g</div>
-        </div>
-        <div>
-          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>YIELD</div>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>{recipe.waterGrams + (recipe.iceGrams || 0)}g</div>
-        </div>
-        <div>
-            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>RATIO</div>
-            <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>1:{recipe.ratio}</div>
-        </div>
-        <div>
-            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: '0.1em', marginBottom: 'var(--space-1)' }}>TEMP</div>
-            <div style={{ fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--cyber-teal)' }}>{recipe.temperature}°C</div>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {['A'].map(initial => (
-             <div key={initial} style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 600 }}>
-               {initial}
-             </div>
-          ))}
-        </div>
-        <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>LAST BREWED 1D AGO</div>
-      </div>
-
-      {/* Action Controls hidden unless hovered to keep UI clean, or place top right absolute */}
-      <div style={{ position: 'absolute', top: 'var(--space-4)', right: 'var(--space-4)', display: 'flex', gap: 'var(--space-2)', opacity: isHovered || isActive ? 1 : 0, transition: 'opacity 0.2s' }}>
-        <button 
-          onClick={handleShare}
-          style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 4, padding: 4, color: showCopyFeedback ? 'var(--cyber-teal)' : 'var(--text-tertiary)', cursor: 'pointer' }}
-          title="Share Formula Link"
-        >
-          {showCopyFeedback ? <Check size={12} /> : <Share2 size={12} />}
-        </button>
-        <button 
-          onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 4, padding: 4, color: 'var(--text-tertiary)', cursor: 'pointer' }}
-          title={recipe.id.startsWith('preset-') ? "Clone & Edit" : "Edit Formula"}
-        >
-          <Edit3 size={12} />
-        </button>
-        {onDelete && (
-          <button 
-            onClick={(e) => { e.stopPropagation(); if(confirm('Delete?')) onDelete(); }}
-            style={{ background: 'rgba(255,0,0,0.05)', border: 'none', borderRadius: 4, padding: 4, color: 'rgba(255,100,100,0.6)', cursor: 'pointer' }}
-            title="Delete Formula"
-          >
-            <Trash2 size={12} />
-          </button>
-        )}
-      </div>
-
-      {isActive && (
-        <motion.div 
-          layoutId="active-indicator"
-          style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 2, background: 'var(--cyber-amber)' }} 
+      <div className="h-40 relative overflow-hidden">
+        <img 
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60" 
+          alt={recipe.name} 
+          src="https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&q=80&w=1000"
         />
-      )}
-    </motion.div>
+        <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-mono text-secondary-container font-black">
+          RATIO 1:{recipe.ratio}
+        </div>
+        {recipe.aiGenerated && (
+          <div className="absolute top-4 left-4 bg-primary-container text-on-primary-container px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest">
+            AI OPTIMIZED
+          </div>
+        )}
+      </div>
 
+      <div className="p-5 space-y-4">
+        <div className="flex justify-between items-start">
+          <h4 className="text-lg font-display font-black text-on-surface uppercase tracking-tight leading-none group-hover:text-primary-container transition-colors">
+            {recipe.name}
+          </h4>
+          <div className="flex items-center gap-1 text-primary-container">
+            <Star size={12} fill="currentColor" />
+            <span className="text-[10px] font-black">4.8</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-[8px] text-on-surface-variant font-display uppercase tracking-widest font-black opacity-60">
+          <span>{recipe.method}</span>
+          <span className="w-1 h-1 bg-white/10 rounded-full" />
+          <span>{recipe.coffeeGrams}g / {recipe.waterGrams}g</span>
+        </div>
+
+        <div className="flex items-center justify-between pt-2 border-t border-white/5">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center">
+              <FlaskConical size={10} className="text-primary-container" />
+            </div>
+            <span className="text-[9px] text-on-surface-variant font-bold uppercase tracking-widest opacity-40">Operator: 0xBrew</span>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={handleShare}
+              className="p-1.5 text-on-surface-variant hover:text-primary-container transition-colors"
+            >
+              {showCopyFeedback ? <Check size={14} /> : <Share2 size={14} />}
+            </button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              className="p-1.5 text-on-surface-variant hover:text-primary-container transition-colors"
+            >
+              <Edit3 size={14} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   )
 }
