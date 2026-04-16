@@ -79,9 +79,9 @@ export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => v
         <motion.section 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative group mb-16"
+          className="relative group mb-8"
         >
-          <div className="relative overflow-hidden rounded-[2rem] h-[400px] md:h-[450px] bg-surface-container-lowest shadow-[0_32px_64px_rgba(255,191,0,0.06)] border border-white/5">
+          <div className="relative overflow-hidden rounded-[1.5rem] h-[200px] md:h-[220px] bg-surface-container-lowest shadow-[0_16px_32px_rgba(255,191,0,0.06)] border border-white/5">
             <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-[#131313]/50 to-transparent z-10" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#131313] via-transparent to-transparent z-10" />
             <img 
@@ -90,24 +90,24 @@ export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => v
               src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=2000"
             />
             
-            <div className="absolute bottom-10 left-10 z-20 space-y-6 max-w-2xl">
-              <div className="flex items-center gap-4">
-                <span className="px-3 py-1 bg-primary-container text-on-primary-container text-[10px] font-black uppercase tracking-widest rounded-md">
-                  Masterwork Formula
+            <div className="absolute bottom-6 left-6 z-20 space-y-3 max-w-2xl">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 bg-primary-container text-on-primary-container text-[8px] font-black uppercase tracking-widest rounded">
+                  Masterwork
                 </span>
                 <div className="flex items-center gap-1 text-[#00f2ff]">
-                  <Star size={14} fill="currentColor" />
-                  <span className="text-sm font-bold">4.9 precision</span>
+                  <Star size={10} fill="currentColor" />
+                  <span className="text-xs font-bold">4.9 precision</span>
                 </div>
               </div>
               
-              <h2 className="text-5xl md:text-6xl font-display font-black tracking-tighter text-on-background uppercase leading-none">
+              <h2 className="text-2xl md:text-3xl font-display font-black tracking-tighter text-on-background uppercase leading-none">
                 {featuredRecipe.name}
               </h2>
               
-              <p className="text-on-surface-variant text-base md:text-lg leading-relaxed max-w-lg font-medium opacity-80">
+              <p className="text-on-surface-variant text-xs md:text-sm leading-relaxed max-w-md font-medium opacity-80 line-clamp-2">
                 A molecular reconstruction of traditional {featuredRecipe.method} extraction. 
-                Synchronized at {featuredRecipe.temperature}°C for peak clarity.
+                Synchronized at {featuredRecipe.temperature}°C.
               </p>
               
               <div className="flex gap-4">
@@ -125,21 +125,21 @@ export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => v
       )}
 
       {/* Community Library Section */}
-      <section className="space-y-8 mb-16">
-        <div className="flex justify-between items-end border-b border-white/5 pb-4">
+      <section className="space-y-4 mb-10">
+        <div className="flex justify-between items-end border-b border-white/5 pb-2">
           <div>
-            <span className="text-[10px] font-display uppercase tracking-[0.3em] text-[#00f2ff] font-bold">Open Source Protocols</span>
-            <h3 className="text-3xl font-display font-black text-on-background uppercase tracking-tight">Community Library</h3>
+            <span className="text-[9px] font-display uppercase tracking-[0.2em] text-[#00f2ff] font-bold">Library</span>
+            <h3 className="text-xl font-display font-black text-on-background uppercase tracking-tight">Community</h3>
           </div>
           <button 
             onClick={handleNewFormula}
-            className="flex items-center gap-2 px-6 py-2 bg-primary-container text-on-primary-container text-[10px] font-black uppercase tracking-widest rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,191,0,0.2)]"
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-primary-container text-on-primary-container text-[9px] font-black uppercase tracking-widest rounded-lg hover:brightness-110 active:scale-95 transition-all"
           >
-            <Plus size={14} /> NEW FORMULA
+            <Plus size={12} /> NEW FORMULA
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {presets.slice(0, 6).map((r) => (
             <RecipeV2Card 
               key={r.id} 
@@ -153,35 +153,35 @@ export function RecipeLibraryV2({ onSelectSuccess }: { onSelectSuccess?: () => v
       </section>
 
       {/* Alchemy Vault Section (List View) */}
-      <section className="space-y-8">
-        <div className="flex justify-between items-end border-b border-white/5 pb-4">
+      <section className="space-y-4">
+        <div className="flex justify-between items-end border-b border-white/5 pb-2">
           <div>
-            <span className="text-[10px] font-display uppercase tracking-[0.3em] text-primary-container font-bold">Encrypted Storage</span>
-            <h3 className="text-3xl font-display font-black text-on-background uppercase tracking-tight">My Alchemy Vault</h3>
+            <span className="text-[9px] font-display uppercase tracking-[0.2em] text-primary-container font-bold">Vault</span>
+            <h3 className="text-xl font-display font-black text-on-background uppercase tracking-tight">My Formulas</h3>
           </div>
-          <div className="flex items-center gap-2 text-primary-container/80 font-display text-[10px] uppercase tracking-widest font-black">
-            <Shield size={12} />
-            Secure Node Active
+          <div className="flex items-center gap-1.5 text-primary-container/80 font-display text-[9px] uppercase tracking-widest font-black">
+            <Shield size={10} />
+            Secure
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {custom.map((r) => (
             <div 
               key={r.id}
               onClick={() => handleSelect(r)}
-              className="flex items-center justify-between p-6 bg-surface-container-low/40 hover:bg-surface-container-high/60 transition-all duration-300 group rounded-2xl border border-white/5 cursor-pointer"
+              className="flex items-center justify-between p-3 bg-surface-container-low/40 hover:bg-surface-container-high/60 transition-all duration-300 group rounded-xl border border-white/5 cursor-pointer"
             >
-              <div className="flex items-center gap-6">
-                <div className="w-14 h-14 bg-[#1a1a1a] rounded-xl flex items-center justify-center text-primary-container ring-1 ring-white/5 shadow-inner">
-                  <FlaskConical size={24} />
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#1a1a1a] rounded-lg flex items-center justify-center text-primary-container ring-1 ring-white/5 shadow-inner">
+                  <FlaskConical size={18} />
                 </div>
                 <div>
-                  <h5 className="text-on-surface font-display font-bold text-lg uppercase tracking-tight group-hover:text-primary-container transition-colors">{r.name}</h5>
-                  <div className="flex items-center gap-3">
-                    <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold opacity-60">METHOD: {r.method}</p>
+                  <h5 className="text-on-surface font-display font-bold text-sm uppercase tracking-tight group-hover:text-primary-container transition-colors">{r.name}</h5>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[8px] text-on-surface-variant uppercase tracking-widest font-bold opacity-60">{r.method.toUpperCase()}</p>
                     <span className="w-1 h-1 bg-white/10 rounded-full" />
-                    <p className="text-[10px] text-primary-container uppercase tracking-widest font-bold">LATEST_BREW: 12.04.24</p>
+                    <p className="text-[8px] text-primary-container uppercase tracking-widest font-bold">1:{r.ratio}</p>
                   </div>
                 </div>
               </div>
